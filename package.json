@@ -1,0 +1,17 @@
+{
+  "name": "auto-resume",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@opencode-ai/sdk": "latest"
+  }
+}
