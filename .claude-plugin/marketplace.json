@@ -1,0 +1,17 @@
+{
+  "name": "auto-resume-marketplace",
+  "owner": {
+    "name": "CyberRookie-X"
+  },
+  "plugins": [
+    {
+      "name": "auto-resume",
+      "source": "./",
+      "description": "Recovery hooks for stopped sessions",
+      "version": "0.1.0",
+      "author": {
+        "name": "CyberRookie-X"
+      }
+    }
+  ]
+}

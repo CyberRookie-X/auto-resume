@@ -1,7 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
-import { access, chmod, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { access, chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -14,11 +14,15 @@ async function expectFile(path: string): Promise<void> {
 
 async function assertRuntimeTree(targetDir: string): Promise<void> {
   for (const relativePath of [
+    "hooks/auto-resume-hook.js",
     "hooks/claude-hook.js",
     "hooks/codex-hook.js",
+    ".claude-plugin/plugin.json",
+    ".claude-plugin/marketplace.json",
     ".claude/settings.json",
     ".codex-plugin/plugin.json",
     "package.json",
+    "dist/auto-resume-hook.js",
     "dist/claude-hook.js",
     "dist/codex-hook.js",
   ]) {
@@ -86,6 +90,9 @@ exit 45
     assert.equal(install.status, 0, install.stderr || install.stdout)
 
     await assertRuntimeTree(targetDir)
+
+    const runtimePackage = JSON.parse(await readFile(join(targetDir, "package.json"), "utf8"))
+    assert.equal(runtimePackage.main, "dist/opencode.js")
 
     const runtimeEnv = {
       ...process.env,

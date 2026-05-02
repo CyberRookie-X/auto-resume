@@ -91,9 +91,12 @@ test("runtime release tarball includes release-safe launchers and assets", async
     const entries = listTarEntries(releaseTarball)
     const filesOnly = entries.filter((entry) => !entry.endsWith("/"))
     const expectedFiles = [
+      ".claude-plugin/marketplace.json",
+      ".claude-plugin/plugin.json",
       ".claude/settings.json",
       ".codex-plugin/plugin.json",
       "README.md",
+      "dist/auto-resume-hook.js",
       "dist/claude-code.js",
       "dist/claude-hook.js",
       "dist/codex-hook.js",
@@ -104,6 +107,7 @@ test("runtime release tarball includes release-safe launchers and assets", async
       "dist/opencode.js",
       "dist/replay.js",
       "dist/types.js",
+      "hooks/auto-resume-hook.js",
       "hooks/claude-hook.js",
       "hooks/codex-hook.js",
       "hooks/hooks.json",
@@ -123,10 +127,22 @@ test("runtime release tarball includes release-safe launchers and assets", async
       extractTarball(releaseTarball, extractDir)
 
       const runtimeReadme = await readFile(join(extractDir, "README.md"), "utf8")
-      assert.match(
-        runtimeReadme,
-        /OpenCode support is included in the same release runtime package\./,
+      assert.equal(runtimeReadme.includes("Use the native integration for each client first:"), true)
+      assert.equal(
+        runtimeReadme.includes(
+          'OpenCode loads this checkout directly from `opencode.json` with `plugin: ["./"]`.',
+        ),
+        true,
       )
+      assert.equal(
+        runtimeReadme.includes(
+          "`install.sh` is the offline fallback when you need to unpack a runtime tarball manually.",
+        ),
+        true,
+      )
+
+      const runtimePackage = JSON.parse(await readFile(join(extractDir, "package.json"), "utf8"))
+      assert.equal(runtimePackage.main, "dist/opencode.js")
 
       const claude = runHookCommand(
         'node "${CLAUDE_PROJECT_DIR}/hooks/claude-hook.js"',

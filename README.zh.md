@@ -4,23 +4,16 @@
 
 ## 安装
 
-从最新 GitHub Release 安装：
+优先使用各客户端的原生集成：
 
-```bash
-./install.sh --target /path/to/auto-resume
-```
-
-脚本会下载 `https://github.com/<owner>/<repo>/releases/latest/download/auto-resume-runtime.tar.gz`。
-
-它会从 `GITHUB_REPOSITORY` 环境变量（如果存在）或当前 checkout 的 `origin` git 远程仓库解析 `<owner>/<repo>`。
-
-离线安装时，传入本地运行时 tarball：
+- OpenCode 会通过 `opencode.json` 里的 `plugin: ["./"]` 直接加载这个 checkout。
+- Claude Code 使用 `.claude/settings.json` 和 `.claude-plugin/` 里的 marketplace / plugin 注册流程。
+- Codex 使用原生的插件浏览器或 CLI。
+- `install.sh` 只作为离线备用方案，在需要手动解包运行时 tarball 时使用。
 
 ```bash
 ./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume
 ```
-
-OpenCode 支持已包含在同一发布运行时包中。同一 tarball 也提供了 Claude Code 和 Codex 的运行时入口。
 
 ## 开发
 

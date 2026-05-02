@@ -69,14 +69,8 @@ function runBuild(): Promise<{ stdout: string; stderr: string; code: number }> {
 }
 
 test("hook configs point at checked-in JS runtimes", async () => {
-  const claudeSettings = JSON.parse(await readFile(new URL("../.claude/settings.json", import.meta.url), "utf8")) as {
-    hooks: {
-      StopFailure: Array<{
-        hooks: Array<{
-          command: string
-        }>
-      }>
-    }
+  const pluginManifest = JSON.parse(await readFile(new URL("../.claude-plugin/plugin.json", import.meta.url), "utf8")) as {
+    hooks: string
   }
   const codexHooks = JSON.parse(await readFile(new URL("../hooks/hooks.json", import.meta.url), "utf8")) as {
     hooks: {
@@ -87,11 +81,13 @@ test("hook configs point at checked-in JS runtimes", async () => {
       }>
     }
   }
+  const autoResumeHookSource = await readFile(new URL("../hooks/auto-resume-hook.js", import.meta.url), "utf8")
   const claudeHookSource = await readFile(new URL("../hooks/claude-hook.js", import.meta.url), "utf8")
   const codexHookSource = await readFile(new URL("../hooks/codex-hook.js", import.meta.url), "utf8")
 
-  assert.equal(claudeSettings.hooks.StopFailure[0].hooks[0].command, 'node "${CLAUDE_PROJECT_DIR}/hooks/claude-hook.js"')
-  assert.equal(codexHooks.hooks.Stop[0].hooks[0].command, 'node "${CLAUDE_PLUGIN_ROOT}/hooks/codex-hook.js"')
+  assert.equal(pluginManifest.hooks, "./hooks/hooks.json")
+  assert.equal(codexHooks.hooks.Stop[0].hooks[0].command, 'node "${CLAUDE_PLUGIN_ROOT}/hooks/auto-resume-hook.js"')
+  assert.equal(autoResumeHookSource.includes('../dist/auto-resume-hook.js'), true)
   assert.equal(claudeHookSource.includes('../dist/claude-hook.js'), true)
   assert.equal(codexHookSource.includes('../dist/codex-hook.js'), true)
 
@@ -99,7 +95,7 @@ test("hook configs point at checked-in JS runtimes", async () => {
   assert.equal(build.code, 0, build.stderr)
 
   const claude = await runHookCommand(
-    claudeSettings.hooks.StopFailure[0].hooks[0].command,
+    'node "${CLAUDE_PROJECT_DIR}/hooks/claude-hook.js"',
     "not json\n",
     { CLAUDE_PROJECT_DIR: repoRoot },
   )

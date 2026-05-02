@@ -1,14 +1,13 @@
 {
-  "hooks": {
-    "StopFailure": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PROJECT_DIR}/hooks/claude-hook.js\""
-          }
-        ]
+  "extraKnownMarketplaces": {
+    "auto-resume-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "CyberRookie-X/auto-resume"
       }
-    ]
+    }
+  },
+  "enabledPlugins": {
+    "auto-resume@auto-resume-marketplace": true
   }
 }

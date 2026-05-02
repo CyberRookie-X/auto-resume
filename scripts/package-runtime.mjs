@@ -53,6 +53,7 @@ async function main() {
   const outPath = isAbsolute(outArg) ? outArg : resolve(repoRoot, outArg)
   const distDir = join(repoRoot, "dist")
   const hooksDir = join(repoRoot, "hooks")
+  const claudePluginDir = join(repoRoot, ".claude-plugin")
   const claudeSettings = join(repoRoot, ".claude", "settings.json")
   const codexPlugin = join(repoRoot, ".codex-plugin", "plugin.json")
   const readmePath = join(repoRoot, "README.md")
@@ -60,6 +61,7 @@ async function main() {
 
   await assertExists(distDir, "dist/ directory. Run npm run build before packaging")
   await assertExists(hooksDir, "hooks/ directory")
+  await assertExists(claudePluginDir, ".claude-plugin/ directory")
   await assertExists(claudeSettings, ".claude/settings.json")
   await assertExists(codexPlugin, ".codex-plugin/plugin.json")
   await assertExists(readmePath, "README.md")
@@ -74,6 +76,7 @@ async function main() {
 
     await cp(distDir, join(stageDir, "dist"), { recursive: true })
     await cp(hooksDir, join(stageDir, "hooks"), { recursive: true })
+    await cp(claudePluginDir, join(stageDir, ".claude-plugin"), { recursive: true })
     await mkdir(join(stageDir, ".claude"), { recursive: true })
     await mkdir(join(stageDir, ".codex-plugin"), { recursive: true })
     await cp(claudeSettings, join(stageDir, ".claude", "settings.json"))
@@ -85,6 +88,7 @@ async function main() {
         {
           name: packageJson.name ?? "auto-resume-runtime",
           version: packageJson.version ?? "0.1.0",
+          main: "dist/opencode.js",
           private: true,
           type: "module",
         },
@@ -95,7 +99,19 @@ async function main() {
 
     const result = spawnSync(
       "tar",
-      ["-czf", outPath, "-C", stageDir, ".claude", ".codex-plugin", "README.md", "dist", "hooks", "package.json"],
+      [
+        "-czf",
+        outPath,
+        "-C",
+        stageDir,
+        ".claude",
+        ".claude-plugin",
+        ".codex-plugin",
+        "README.md",
+        "dist",
+        "hooks",
+        "package.json",
+      ],
       {
         encoding: "utf8",
       },

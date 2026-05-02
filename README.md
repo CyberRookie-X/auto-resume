@@ -6,23 +6,16 @@ OpenCode recovery helpers for resuming stopped sessions.
 
 ## Install
 
-Install from the latest GitHub Release:
+Use the native integration for each client first:
 
-```bash
-./install.sh --target /path/to/auto-resume
-```
-
-The script downloads `https://github.com/<owner>/<repo>/releases/latest/download/auto-resume-runtime.tar.gz`.
-
-It resolves `<owner>/<repo>` from `GITHUB_REPOSITORY` when available, or from the `origin` git remote when you run it inside a checkout.
-
-For offline installs, pass a local runtime tarball:
+- OpenCode loads this checkout directly from `opencode.json` with `plugin: ["./"]`.
+- Claude Code uses the marketplace/plugin registration flow from `.claude/settings.json` and `.claude-plugin/`.
+- Codex uses the native plugin browser or CLI.
+- `install.sh` is the offline fallback when you need to unpack a runtime tarball manually.
 
 ```bash
 ./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume
 ```
-
-OpenCode support is included in the same release runtime package. The same tarball also ships the Claude Code and Codex runtime entrypoints.
 
 ## Development
 

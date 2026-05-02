@@ -31,6 +31,12 @@ type AdapterOptions = {
   timers?: TimerAPI
 }
 
+type OpenCodePluginInput = {
+  client: OpenCodeClient
+  config?: Partial<AutoResumeConfig>
+  timers?: TimerAPI
+}
+
 type PromptContext = {
   agent?: unknown
   model?: unknown
@@ -590,6 +596,16 @@ export function createOpenCodeAdapter({ client, config, timers }: AdapterOptions
       } catch {
         return
       }
+    },
+  }
+}
+
+export default async function autoResumePlugin({ client, config = {}, timers }: OpenCodePluginInput) {
+  const adapter = createOpenCodeAdapter({ client, config, timers })
+
+  return {
+    event: async ({ event }: { event: OpenCodeEvent }) => {
+      await adapter.handleEvent(event)
     },
   }
 }

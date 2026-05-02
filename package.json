@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "dist/opencode.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
     "test": "node --test --import tsx",
     "release:runtime": "node scripts/package-runtime.mjs --out .release/auto-resume-runtime.tar.gz"
   },
