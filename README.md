@@ -20,6 +20,8 @@ For offline installs, pass a local runtime tarball:
 ./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume
 ```
 
+OpenCode support is included in the same release runtime package. The same tarball also ships the Claude Code and Codex runtime entrypoints.
+
 ## Development
 
 ```bash

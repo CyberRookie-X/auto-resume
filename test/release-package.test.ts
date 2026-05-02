@@ -1,7 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import { spawn, spawnSync } from "node:child_process"
-import { mkdtemp, rm } from "node:fs/promises"
+import { mkdtemp, readFile, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -121,6 +121,12 @@ test("runtime release tarball includes release-safe launchers and assets", async
     const extractDir = await mkdtemp(join(tmpdir(), "auto-resume-release-extract-"))
     try {
       extractTarball(releaseTarball, extractDir)
+
+      const runtimeReadme = await readFile(join(extractDir, "README.md"), "utf8")
+      assert.match(
+        runtimeReadme,
+        /OpenCode support is included in the same release runtime package\./,
+      )
 
       const claude = runHookCommand(
         'node "${CLAUDE_PROJECT_DIR}/hooks/claude-hook.js"',
