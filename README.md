@@ -32,7 +32,7 @@ Use the native plugin flow first:
 ## Configuration Reference
 
 - `opencode.json`: OpenCode reads this file to load the local plugin checkout.
-- `.claude-plugin/plugin.json`: Claude Code reads this plugin manifest to connect the marketplace entry to the hook bundle.
+- `.claude-plugin/plugin.json`: Claude Code reads this plugin manifest to point at `hooks/hooks.json`.
 - `.claude-plugin/marketplace.json`: Claude Code reads this marketplace definition to expose the repo as `auto-resume-marketplace`.
 - `.claude/settings.json`: Claude Code reads this settings file to enable `auto-resume@auto-resume-marketplace`.
 - `.codex-plugin/plugin.json`: Codex reads this plugin manifest to point at the shared hook map.

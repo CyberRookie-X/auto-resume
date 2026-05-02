@@ -134,6 +134,13 @@ test("runtime release tarball includes release-safe launchers and assets", async
         ),
         true,
       )
+      assert.equal(runtimeReadme.includes("## Configuration Reference"), true)
+      assert.equal(
+        runtimeReadme.includes(
+          "`.claude-plugin/plugin.json`: Claude Code reads this plugin manifest to point at `hooks/hooks.json`.",
+        ),
+        true,
+      )
       assert.equal(
         runtimeReadme.includes(
           "`install.sh` is the offline fallback when you need to unpack a runtime tarball manually.",

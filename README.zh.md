@@ -4,16 +4,37 @@
 
 ## 安装
 
-优先使用各客户端的原生集成：
+优先使用各客户端的原生插件安装方式：
+
+### OpenCode
 
 - OpenCode 会通过 `opencode.json` 里的 `plugin: ["./"]` 直接加载这个 checkout。
-- Claude Code 使用 `.claude/settings.json` 和 `.claude-plugin/` 里的 marketplace / plugin 注册流程。
-- Codex 使用原生的插件浏览器或 CLI。
-- `install.sh` 只作为离线备用方案，在需要手动解包运行时 tarball 时使用。
+
+### Claude Code
+
+- Claude Code 使用 `.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json` 和 `.claude/settings.json`。
+- 该插件会以 `auto-resume@auto-resume-marketplace` 的形式启用。
+
+### Codex
+
+- Codex 使用 `.codex-plugin/plugin.json`，配合共享的 marketplace 元数据和 `hooks/hooks.json`。
+
+### 离线备用方案
+
+- `install.sh` 是离线备用方案，用于需要手动解包运行时 tarball 的情况。
 
 ```bash
 ./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume
 ```
+
+## 配置参考
+
+- `opencode.json`：OpenCode 读取此文件以加载本地插件 checkout。
+- `.claude-plugin/plugin.json`：Claude Code 读取此插件清单，以指向 `hooks/hooks.json`。
+- `.claude-plugin/marketplace.json`：Claude Code 读取此 marketplace 定义，以将仓库暴露为 `auto-resume-marketplace`。
+- `.claude/settings.json`：Claude Code 读取此设置文件，以启用 `auto-resume@auto-resume-marketplace`。
+- `.codex-plugin/plugin.json`：Codex 读取此插件清单，以指向共享的 hook 映射。
+- `hooks/hooks.json`：Claude Code 和 Codex 读取这个共享 hook 映射，以在 `Stop` 时启动 `hooks/auto-resume-hook.js`。
 
 ## 开发
 
