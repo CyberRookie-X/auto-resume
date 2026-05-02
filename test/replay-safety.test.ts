@@ -45,6 +45,39 @@ test("benign assistant parts do not block read-only replay safety", () => {
   assert.equal(safety, "safe")
 })
 
+test("empty assistant turns are replay-safe when no mutating tool appears", () => {
+  const safety = classifyReplaySafety([
+    {
+      info: { role: "user", id: "msg_u1" },
+      parts: [{ type: "text", text: "search the docs" }],
+    },
+    {
+      info: { role: "assistant", id: "msg_a1" },
+      parts: [],
+    },
+  ])
+
+  assert.equal(safety, "safe")
+})
+
+test("reasoning-only assistant turns remain replay-safe", () => {
+  const safety = classifyReplaySafety([
+    {
+      info: { role: "user", id: "msg_u1" },
+      parts: [{ type: "text", text: "search the docs" }],
+    },
+    {
+      info: { role: "assistant", id: "msg_a1" },
+      parts: [
+        { type: "reasoning", text: "thinking" },
+        { type: "step-finish", reason: "done" },
+      ],
+    },
+  ])
+
+  assert.equal(safety, "safe")
+})
+
 test("write, shell, and unknown tool chains are unsafe", () => {
   assert.equal(
     classifyReplaySafety([
@@ -79,6 +112,36 @@ test("write, shell, and unknown tool chains are unsafe", () => {
       {
         info: { role: "assistant", id: "msg_a4" },
         parts: [{ type: "tool", tool: "rename", state: { status: "completed" } }],
+      },
+    ]),
+    "unsafe",
+  )
+
+  assert.equal(
+    classifyReplaySafety([
+      {
+        info: { role: "assistant", id: "msg_a5" },
+        parts: [{ type: "tool", tool: "delete", state: { status: "completed" } }],
+      },
+    ]),
+    "unsafe",
+  )
+
+  assert.equal(
+    classifyReplaySafety([
+      {
+        info: { role: "assistant", id: "msg_a6" },
+        parts: [{ type: "tool", tool: "move", state: { status: "completed" } }],
+      },
+    ]),
+    "unsafe",
+  )
+
+  assert.equal(
+    classifyReplaySafety([
+      {
+        info: { role: "assistant", id: "msg_a7" },
+        parts: [{ type: "tool", tool: "unknown", state: { status: "completed" } }],
       },
     ]),
     "unsafe",

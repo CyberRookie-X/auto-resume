@@ -4,6 +4,24 @@ OpenCode recovery helpers for resuming stopped sessions.
 
 ## Install
 
+Install from the latest GitHub Release:
+
+```bash
+./install.sh --target /path/to/auto-resume
+```
+
+The script downloads `https://github.com/<owner>/<repo>/releases/latest/download/auto-resume-runtime.tar.gz`.
+
+It resolves `<owner>/<repo>` from `GITHUB_REPOSITORY` when available, or from the `origin` git remote when you run it inside a checkout.
+
+For offline installs, pass a local runtime tarball:
+
+```bash
+./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume
+```
+
+## Development
+
 ```bash
 npm install
 ```

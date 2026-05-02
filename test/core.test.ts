@@ -188,6 +188,31 @@ test('scope: "child" rules do not match scope: "root" events', () => {
   assert.equal(decision.type, "ignore")
 })
 
+test('scope: "root" rules do not match scope: "child" events', () => {
+  const engine = createRecoveryEngine({
+    now: () => 0,
+    rules: [
+      {
+        id: "roots-only",
+        scope: "root",
+        match: { messageRegex: "stream_read_error" },
+        action: { type: "prompt", text: "RESUME" },
+        retry: { baseMs: 1000, factor: 2, maxMs: 8000, maxAttempts: 3 },
+      },
+    ],
+  })
+
+  const decision = engine.onError({
+    sessionID: "ses_child",
+    scope: "child",
+    errorName: "UnknownError",
+    message: "stream_read_error",
+    raw: "stream_read_error",
+  })
+
+  assert.equal(decision.type, "ignore")
+})
+
 test("maxAttempts stops additional recovery scheduling after executed recoveries", () => {
   const engine = createRecoveryEngine({
     now: () => 0,
@@ -232,6 +257,54 @@ test("maxAttempts stops additional recovery scheduling after executed recoveries
   assert.equal(second.type, "schedule")
   assert.equal(second.delayMs, 2000)
   assert.equal(third.type, "ignore")
+})
+
+test("backoff caps at maxMs across executed recoveries", () => {
+  const engine = createRecoveryEngine({
+    now: () => 0,
+    rules: [
+      {
+        id: "capped",
+        scope: "all",
+        match: { messageRegex: "stream_read_error" },
+        action: { type: "prompt", text: "RESUME" },
+        retry: { baseMs: 500, factor: 3, maxMs: 2000, maxAttempts: 4 },
+      },
+    ],
+  })
+
+  const first = engine.onError({
+    sessionID: "ses_13",
+    scope: "root",
+    errorName: "UnknownError",
+    message: "stream_read_error#1",
+    raw: "stream_read_error#1",
+  })
+  engine.markExecuted({ sessionID: "ses_13", ruleID: "capped" })
+
+  const second = engine.onError({
+    sessionID: "ses_13",
+    scope: "root",
+    errorName: "UnknownError",
+    message: "stream_read_error#2",
+    raw: "stream_read_error#2",
+  })
+  engine.markExecuted({ sessionID: "ses_13", ruleID: "capped" })
+
+  const third = engine.onError({
+    sessionID: "ses_13",
+    scope: "root",
+    errorName: "UnknownError",
+    message: "stream_read_error#3",
+    raw: "stream_read_error#3",
+  })
+
+  assert.equal(first.type, "schedule")
+  assert.equal(first.delayMs, 500)
+  assert.equal(second.type, "schedule")
+  assert.equal(second.delayMs, 1500)
+  assert.equal(third.type, "schedule")
+  assert.equal(third.delayMs, 2000)
 })
 
 test("messageIncludes ignores raw payload and error name", () => {

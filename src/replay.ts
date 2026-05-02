@@ -1,12 +1,17 @@
-export type ReplaySafety = "safe" | "unsafe"
+import type { ReplayRequest, ReplaySafety } from "./types.js"
 
-export type ReplayRequest = {
-  parts: Array<{ type: "text"; text: string }>
-  agent?: unknown
-  model?: unknown
-}
+export type { ReplayRequest, ReplaySafety }
 
-const SAFE_TOOL_NAMES = new Set(["read", "search", "list", "glob", "grep", "fetch"])
+const SAFE_TOOL_NAMES = new Set([
+  "read",
+  "search",
+  "list",
+  "glob",
+  "grep",
+  "fetch",
+  "websearch",
+  "webfetch",
+])
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
@@ -63,11 +68,6 @@ export function classifyReplaySafety(messages: readonly Record<string, unknown>[
   }
 
   const parts = getMessageParts(latestAssistantMessage)
-  if (parts.length === 0) {
-    return "unsafe"
-  }
-
-  let sawToolPart = false
   for (const part of parts) {
     if (!isRecord(part)) {
       return "unsafe"
@@ -77,14 +77,13 @@ export function classifyReplaySafety(messages: readonly Record<string, unknown>[
       continue
     }
 
-    sawToolPart = true
     const toolName = readStringProperty(part, "tool")
     if (!toolName || !SAFE_TOOL_NAMES.has(toolName)) {
       return "unsafe"
     }
   }
 
-  return sawToolPart ? "safe" : "unsafe"
+  return "safe"
 }
 
 export function extractReplayRequest(messages: readonly Record<string, unknown>[]): ReplayRequest | null {

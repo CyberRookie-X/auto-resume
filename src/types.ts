@@ -1,5 +1,13 @@
 export type RecoveryScope = "root" | "child" | "all"
 
+export type ReplaySafety = "safe" | "unsafe"
+
+export type ReplayRequest = {
+  parts: Array<{ type: "text"; text: string }>
+  agent?: unknown
+  model?: unknown
+}
+
 export type RecoveryTextValue = string | readonly string[]
 
 export type RecoveryAction = {

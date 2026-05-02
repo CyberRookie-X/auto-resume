@@ -1,0 +1,6 @@
+{
+  "name": "auto-resume",
+  "version": "0.1.0",
+  "description": "Codex recovery hooks for auto-resume",
+  "hooks": "./hooks/hooks.json"
+}
