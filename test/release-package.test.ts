@@ -127,7 +127,7 @@ test("runtime release tarball includes release-safe launchers and assets", async
       extractTarball(releaseTarball, extractDir)
 
       const runtimeReadme = await readFile(join(extractDir, "README.md"), "utf8")
-      assert.equal(runtimeReadme.includes("Use the native integration for each client first:"), true)
+      assert.equal(runtimeReadme.includes("Use the native plugin flow first:"), true)
       assert.equal(
         runtimeReadme.includes(
           'OpenCode loads this checkout directly from `opencode.json` with `plugin: ["./"]`.',

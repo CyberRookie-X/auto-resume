@@ -21,6 +21,7 @@ async function assertRuntimeTree(targetDir: string): Promise<void> {
     ".claude-plugin/marketplace.json",
     ".claude/settings.json",
     ".codex-plugin/plugin.json",
+    "README.md",
     "package.json",
     "dist/auto-resume-hook.js",
     "dist/claude-hook.js",
@@ -93,6 +94,21 @@ exit 45
 
     const runtimePackage = JSON.parse(await readFile(join(targetDir, "package.json"), "utf8"))
     assert.equal(runtimePackage.main, "dist/opencode.js")
+
+    const runtimeReadme = await readFile(join(targetDir, "README.md"), "utf8")
+    assert.equal(runtimeReadme.includes("Use the native plugin flow first:"), true)
+    assert.equal(
+      runtimeReadme.includes(
+        'OpenCode loads this checkout directly from `opencode.json` with `plugin: ["./"]`.',
+      ),
+      true,
+    )
+    assert.equal(
+      runtimeReadme.includes(
+        "`install.sh` is the offline fallback when you need to unpack a runtime tarball manually.",
+      ),
+      true,
+    )
 
     const runtimeEnv = {
       ...process.env,

@@ -6,16 +6,37 @@ OpenCode recovery helpers for resuming stopped sessions.
 
 ## Install
 
-Use the native integration for each client first:
+Use the native plugin flow first:
+
+### OpenCode
 
 - OpenCode loads this checkout directly from `opencode.json` with `plugin: ["./"]`.
-- Claude Code uses the marketplace/plugin registration flow from `.claude/settings.json` and `.claude-plugin/`.
-- Codex uses the native plugin browser or CLI.
+
+### Claude Code
+
+- Claude Code uses `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.claude/settings.json`.
+- The plugin is enabled as `auto-resume@auto-resume-marketplace`.
+
+### Codex
+
+- Codex uses `.codex-plugin/plugin.json` with the shared marketplace metadata and `hooks/hooks.json`.
+
+### Offline fallback
+
 - `install.sh` is the offline fallback when you need to unpack a runtime tarball manually.
 
 ```bash
 ./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume
 ```
+
+## Configuration Reference
+
+- `opencode.json`: OpenCode reads this file to load the local plugin checkout.
+- `.claude-plugin/plugin.json`: Claude Code reads this plugin manifest to connect the marketplace entry to the hook bundle.
+- `.claude-plugin/marketplace.json`: Claude Code reads this marketplace definition to expose the repo as `auto-resume-marketplace`.
+- `.claude/settings.json`: Claude Code reads this settings file to enable `auto-resume@auto-resume-marketplace`.
+- `.codex-plugin/plugin.json`: Codex reads this plugin manifest to point at the shared hook map.
+- `hooks/hooks.json`: Claude Code and Codex read this shared hook map to launch `hooks/auto-resume-hook.js` on `Stop`.
 
 ## Development
 
