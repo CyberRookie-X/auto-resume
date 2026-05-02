@@ -2,6 +2,8 @@
 
 OpenCode recovery helpers for resuming stopped sessions.
 
+[中文版](README.zh.md)
+
 ## Install
 
 Install from the latest GitHub Release:
