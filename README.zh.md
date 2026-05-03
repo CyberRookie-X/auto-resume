@@ -19,7 +19,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.4"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.5"]
 }
 ```
 
@@ -42,7 +42,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Recovery hooks for stopped sessions",
   "author": {
     "name": "CyberRookie-X"
@@ -64,7 +64,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
       "name": "auto-resume",
       "source": "./",
       "description": "Recovery hooks for stopped sessions",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "author": {
         "name": "CyberRookie-X"
       }
@@ -108,7 +108,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Codex recovery hooks for auto-resume",
   "hooks": "./hooks/hooks.json"
 }
