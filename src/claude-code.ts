@@ -1,7 +1,7 @@
 import { spawn as defaultSpawn } from "node:child_process"
 import { readFile as defaultReadFile } from "node:fs/promises"
 
-import { loadAutoResumeConfigFile } from "./config-file.js"
+import { loadAutoResumeRuntimeConfigFile } from "./config-file.js"
 import { classifyReplaySafety, extractReplayRequest } from "./replay.js"
 import type { ReplayRequest, ReplaySafety } from "./types.js"
 
@@ -336,7 +336,7 @@ export function parseClaudeHookInput(rawInput: string): ClaudeHookInput | null {
 }
 
 export function planClaudeRecovery(input: ClaudeHookInput, transcriptText?: string | null): ClaudeRecoveryPlan {
-  const safeToolNames = loadAutoResumeConfigFile().safeToolNames
+  const safeToolNames = loadAutoResumeRuntimeConfigFile().safeToolNames
 
   if (!transcriptText) {
     return buildFallbackPlan(input)

@@ -19,7 +19,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.1"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.2"]
 }
 ```
 
@@ -40,7 +40,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Recovery hooks for stopped sessions",
   "author": {
     "name": "CyberRookie-X"
@@ -62,7 +62,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
       "name": "auto-resume",
       "source": "./",
       "description": "Recovery hooks for stopped sessions",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": {
         "name": "CyberRookie-X"
       }
@@ -106,7 +106,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Codex recovery hooks for auto-resume",
   "hooks": "./hooks/hooks.json"
 }
@@ -144,13 +144,49 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 
 ## 配置参考
 
-- `auto-resume.jsonc`：所有运行时共享的默认恢复规则和只读工具白名单。
+- `auto-resume.jsonc`：运行时配置、只读工具白名单和可选的规则同步开关。
+- `auto-resume.rules.jsonc`：共享的默认恢复规则。开启同步后，OpenCode 会从配置的来源刷新缓存副本。
 - `opencode.json`：OpenCode 读取此文件以加载 GitHub 发布版插件。
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
 - `.claude/settings.json`
 - `.codex-plugin/plugin.json`
 - `hooks/hooks.json`
+
+### 运行时配置
+
+```jsonc
+{
+  "safeToolNames": ["read", "search", "list", "glob", "grep", "fetch", "websearch", "webfetch"],
+  "rulesSync": {
+    "enabled": false,
+    "intervalMs": 21600000,
+    "githubMirror": {
+      "enabled": false,
+      "baseUrl": "https://ghfast.top"
+    },
+    "sources": ["https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/auto-resume.rules.jsonc"]
+  }
+}
+```
+
+`githubMirror.enabled` 控制 GitHub 原始地址的首次请求顺序。`false` 时先请求官方地址，失败后回退到镜像；`true` 时先请求镜像，失败后回退到官方地址。
+
+### 规则文件
+
+```jsonc
+{
+  "rules": [
+    {
+      "id": "resume-on-stream-read-error",
+      "scope": "all",
+      "match": { "messageRegex": "stream_read_error" },
+      "action": { "type": "prompt", "text": "RESUME" },
+      "retry": { "baseMs": 1000, "factor": 2, "maxMs": 8000, "maxAttempts": 3 }
+    }
+  ]
+}
+```
 
 ## 开发
 

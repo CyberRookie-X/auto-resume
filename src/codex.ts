@@ -1,6 +1,6 @@
 import { readFile as defaultReadFile } from "node:fs/promises"
 
-import { loadAutoResumeConfigFile } from "./config-file.js"
+import { loadAutoResumeRuntimeConfigFile } from "./config-file.js"
 import { classifyReplaySafety, extractReplayRequest } from "./replay.js"
 
 type RecordLike = Record<string, unknown>
@@ -339,7 +339,7 @@ function readTranscriptText(input: CodexHookInput | null, readFile: NonNullable<
 }
 
 function buildCodexStopOutput(input: CodexHookInput | null, transcriptText: string | undefined): CodexHookOutput {
-  const safeToolNames = loadAutoResumeConfigFile().safeToolNames
+  const safeToolNames = loadAutoResumeRuntimeConfigFile().safeToolNames
 
   if (!transcriptText) {
     return buildFallbackOutput()

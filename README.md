@@ -21,7 +21,7 @@ Create or update `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.1"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.2"]
 }
 ```
 
@@ -42,7 +42,7 @@ Create or update these files:
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Recovery hooks for stopped sessions",
   "author": {
     "name": "CyberRookie-X"
@@ -64,7 +64,7 @@ Create or update these files:
       "name": "auto-resume",
       "source": "./",
       "description": "Recovery hooks for stopped sessions",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "author": {
         "name": "CyberRookie-X"
       }
@@ -108,7 +108,7 @@ Create or update these files:
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Codex recovery hooks for auto-resume",
   "hooks": "./hooks/hooks.json"
 }
@@ -146,13 +146,49 @@ Restart Codex.
 
 ## Configuration Reference
 
-- `auto-resume.jsonc`: shared default recovery rules and the read-only tool allow list.
+- `auto-resume.jsonc`: runtime settings, the read-only tool allow list, and optional rules sync settings.
+- `auto-resume.rules.jsonc`: shared default recovery rules. If rules sync is enabled, OpenCode refreshes a cached copy from the configured sources.
 - `opencode.json`: OpenCode reads this file to load the GitHub release plugin.
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
 - `.claude/settings.json`
 - `.codex-plugin/plugin.json`
 - `hooks/hooks.json`
+
+### Runtime Config
+
+```jsonc
+{
+  "safeToolNames": ["read", "search", "list", "glob", "grep", "fetch", "websearch", "webfetch"],
+  "rulesSync": {
+    "enabled": false,
+    "intervalMs": 21600000,
+    "githubMirror": {
+      "enabled": false,
+      "baseUrl": "https://ghfast.top"
+    },
+    "sources": ["https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/auto-resume.rules.jsonc"]
+  }
+}
+```
+
+`githubMirror.enabled` controls the first request order for GitHub raw downloads. When it is `false`, OpenCode tries the official URL first and falls back to the mirror on failure. When it is `true`, it tries the mirror first and falls back to the official URL if the mirror fails.
+
+### Rules File
+
+```jsonc
+{
+  "rules": [
+    {
+      "id": "resume-on-stream-read-error",
+      "scope": "all",
+      "match": { "messageRegex": "stream_read_error" },
+      "action": { "type": "prompt", "text": "RESUME" },
+      "retry": { "baseMs": 1000, "factor": 2, "maxMs": 8000, "maxAttempts": 3 }
+    }
+  ]
+}
+```
 
 ## Development
 

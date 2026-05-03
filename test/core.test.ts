@@ -34,6 +34,53 @@ test("onError schedules recovery for stream read errors", () => {
   })
 })
 
+test("replaceRules swaps matching rules without resetting state", () => {
+  const engine = createRecoveryEngine({
+    now: () => 0,
+    rules: [
+      {
+        id: "first-rule",
+        scope: "all",
+        match: { messageRegex: "first-error" },
+        action: { type: "prompt", text: "RESUME" },
+        retry: { baseMs: 100, factor: 2, maxMs: 1000, maxAttempts: 3 },
+      },
+    ],
+  })
+
+  const firstDecision = engine.onError({
+    sessionID: "ses_replace",
+    scope: "root",
+    errorName: "UnknownError",
+    message: "first-error",
+    raw: "first-error",
+  })
+
+  assert.equal(firstDecision.type, "schedule")
+  engine.markExecuted({ sessionID: "ses_replace", ruleID: "first-rule" })
+
+  engine.replaceRules([
+    {
+      id: "second-rule",
+      scope: "all",
+      match: { messageRegex: "second-error" },
+      action: { type: "prompt", text: "RESUME" },
+      retry: { baseMs: 200, factor: 2, maxMs: 1000, maxAttempts: 3 },
+    },
+  ])
+
+  const secondDecision = engine.onError({
+    sessionID: "ses_replace_next",
+    scope: "root",
+    errorName: "UnknownError",
+    message: "second-error",
+    raw: "second-error",
+  })
+
+  assert.equal(secondDecision.type, "schedule")
+  assert.equal(secondDecision.ruleID, "second-rule")
+})
+
 test("onScan schedules recovery for reasoning-only stops", () => {
   const engine = createRecoveryEngine({
     now: () => 0,

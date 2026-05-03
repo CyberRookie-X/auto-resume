@@ -260,7 +260,7 @@ function clearSession(store: Map<string, SessionState>, sessionID: string): void
 
 export function createRecoveryEngine(options: RecoveryEngineOptions): RecoveryEngine {
   const store = new Map<string, SessionState>()
-  const rules = options.rules.map(compileRule)
+  let rules = options.rules.map(compileRule)
 
   return {
     onError(input: RecoveryErrorInput) {
@@ -315,6 +315,10 @@ export function createRecoveryEngine(options: RecoveryEngineOptions): RecoveryEn
 
     clearSession(sessionID: string) {
       clearSession(store, sessionID)
+    },
+
+    replaceRules(nextRules: RecoveryRule[]) {
+      rules = nextRules.map(compileRule)
     },
   }
 }

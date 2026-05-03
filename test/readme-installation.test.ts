@@ -122,6 +122,7 @@ test("README files mirror the plugin-first install flow and configuration index"
       configHeading: "## Configuration Reference",
       configIndexSnippets: [
         "`auto-resume.jsonc`",
+        "`auto-resume.rules.jsonc`",
         "`opencode.json`",
         "`.claude-plugin/plugin.json`",
         "`.claude-plugin/marketplace.json`",
@@ -130,7 +131,7 @@ test("README files mirror the plugin-first install flow and configuration index"
         "`hooks/hooks.json`",
       ],
       legacySnippets: [
-        "OpenCode reads this file to load the local plugin checkout.",
+        "shared default recovery rules and the read-only tool allow list.",
         "Claude Code reads this plugin manifest to point at `hooks/hooks.json`.",
         "Claude Code reads this marketplace definition to expose the repo as `auto-resume-marketplace`.",
         "Claude Code reads this settings file to enable `auto-resume@auto-resume-marketplace`.",
@@ -158,6 +159,7 @@ test("README files mirror the plugin-first install flow and configuration index"
       configHeading: "## 配置参考",
       configIndexSnippets: [
         "`auto-resume.jsonc`",
+        "`auto-resume.rules.jsonc`",
         "`opencode.json`",
         "`.claude-plugin/plugin.json`",
         "`.claude-plugin/marketplace.json`",
@@ -166,7 +168,7 @@ test("README files mirror the plugin-first install flow and configuration index"
         "`hooks/hooks.json`",
       ],
       legacySnippets: [
-        "OpenCode 会通过 `opencode.json` 里的 `plugin: [\"./\"]` 直接加载这个 checkout。",
+        "所有运行时共享的默认恢复规则和只读工具白名单。",
         "Claude Code 使用 `.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json` 和 `.claude/settings.json`。",
         "Codex 使用 `.codex-plugin/plugin.json`，配合共享的 marketplace 元数据和 `hooks/hooks.json`。",
       ],

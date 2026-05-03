@@ -39,8 +39,24 @@ export type RecoveryRule = {
   retry: RecoveryRetryPolicy
 }
 
-export type AutoResumeConfig = {
+export type GitHubMirrorConfig = {
+  enabled?: boolean
+  baseUrl?: string
+}
+
+export type RulesSyncConfig = {
+  enabled?: boolean
+  intervalMs?: number
+  sources?: string[]
+  githubMirror?: GitHubMirrorConfig
+}
+
+export type AutoResumeRuntimeConfig = {
   safeToolNames: string[]
+  rulesSync?: RulesSyncConfig
+}
+
+export type AutoResumeConfig = AutoResumeRuntimeConfig & {
   rules: RecoveryRule[]
 }
 
@@ -106,4 +122,5 @@ export type RecoveryEngine = {
   markFailed(input: RecoveryMarkFailedInput): void
   clearPendingRecovery(input: RecoveryClearPendingInput): void
   clearSession(sessionID: string): void
+  replaceRules(rules: RecoveryRule[]): void
 }

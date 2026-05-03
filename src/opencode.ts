@@ -1,6 +1,8 @@
 import { createRecoveryEngine } from "./core.js"
 import { normalizeConfig } from "./config.js"
+import { DEFAULT_RULES_CACHE_PATH } from "./config-file.js"
 import { classifyReplaySafety, extractReplayRequest, type ReplayRequest } from "./replay.js"
+import { startRulesSyncLoop } from "./rules-sync.js"
 import type { AutoResumeConfig, RecoveryScanInput, RecoveryScope, RecoveryScheduleDecision } from "./types.js"
 
 type OpenCodePromptBody = ReplayRequest
@@ -28,12 +30,16 @@ type TimerHandle = ReturnType<typeof globalThis.setTimeout>
 type AdapterOptions = {
   client: OpenCodeClient
   config?: Partial<AutoResumeConfig>
+  fetch?: typeof globalThis.fetch
+  rulesCachePath?: string
   timers?: TimerAPI
 }
 
 type OpenCodePluginInput = {
   client: OpenCodeClient
   config?: Partial<AutoResumeConfig>
+  fetch?: typeof globalThis.fetch
+  rulesCachePath?: string
   timers?: TimerAPI
 }
 
@@ -431,8 +437,9 @@ function createRecoveryDispatcher(client: OpenCodeClient, isDeleted: (sessionID:
   }
 }
 
-export function createOpenCodeAdapter({ client, config, timers }: AdapterOptions) {
-  const normalizedConfig = normalizeConfig(config)
+export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesCachePath, timers }: AdapterOptions) {
+  const resolvedRulesCachePath = rulesCachePath ?? DEFAULT_RULES_CACHE_PATH
+  const normalizedConfig = normalizeConfig(config, { cachePath: resolvedRulesCachePath })
   const engine = createRecoveryEngine({
     now: () => Date.now(),
     rules: normalizedConfig.rules,
@@ -446,6 +453,21 @@ export function createOpenCodeAdapter({ client, config, timers }: AdapterOptions
       globalThis.clearTimeout(handle)
     },
   }
+
+  const stopRulesSync =
+    config?.rules === undefined && (normalizedConfig.rulesSync?.enabled ?? false)
+      ? startRulesSyncLoop({
+          cachePath: resolvedRulesCachePath,
+          fetchImpl,
+          githubMirror: normalizedConfig.rulesSync?.githubMirror,
+          intervalMs: normalizedConfig.rulesSync?.intervalMs ?? 24 * 60 * 60 * 1000,
+          onRules(rules) {
+            engine.replaceRules(rules)
+          },
+          sources: normalizedConfig.rulesSync?.sources,
+          timers: timerAPI,
+        })
+      : () => undefined
 
   const dispatchRecovery = createRecoveryDispatcher(client, (sessionID) => deletedSessions.has(sessionID))
   const pendingTimers = new Map<string, { handle: TimerHandle; ruleID: string }>()
@@ -597,6 +619,10 @@ export function createOpenCodeAdapter({ client, config, timers }: AdapterOptions
       } catch {
         return
       }
+    },
+
+    dispose() {
+      stopRulesSync()
     },
   }
 }

@@ -1,8 +1,14 @@
 import { readFileSync } from "node:fs"
+import { homedir } from "node:os"
+import { join } from "node:path"
 
-import type { AutoResumeConfig, RecoveryRule } from "./types.js"
+import type { AutoResumeConfig, AutoResumeRuntimeConfig, RecoveryRule, RulesSyncConfig } from "./types.js"
 
-const DEFAULT_CONFIG_URL = new URL("../auto-resume.jsonc", import.meta.url)
+export const DEFAULT_RUNTIME_CONFIG_URL = new URL("../auto-resume.jsonc", import.meta.url)
+export const DEFAULT_RULES_CONFIG_URL = new URL("../auto-resume.rules.jsonc", import.meta.url)
+export const DEFAULT_RULES_CACHE_PATH = join(homedir(), ".cache", "auto-resume", "auto-resume.rules.jsonc")
+export const DEFAULT_RULES_SOURCE_URL = "https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/auto-resume.rules.jsonc"
+export const DEFAULT_GITHUB_MIRROR_BASE_URL = "https://ghfast.top"
 export const DEFAULT_SAFE_TOOL_NAMES = ["read", "search", "list", "glob", "grep", "fetch", "websearch", "webfetch"] as const
 
 type RecordLike = Record<string, unknown>
@@ -102,14 +108,6 @@ function stripJsonc(input: string): string {
   return output
 }
 
-function normalizeRule(rule: unknown, index: number): RecoveryRule {
-  if (!isRecord(rule)) {
-    throw new Error(`Invalid rule at index ${index}`)
-  }
-
-  return rule as RecoveryRule
-}
-
 function normalizeSafeToolNames(value: unknown): string[] {
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || item.length === 0)) {
     throw new Error("auto-resume config must contain a safeToolNames array")
@@ -118,24 +116,140 @@ function normalizeSafeToolNames(value: unknown): string[] {
   return [...value]
 }
 
-export function parseAutoResumeConfig(text: string): AutoResumeConfig {
+function normalizeRulesSync(value: unknown): RulesSyncConfig | undefined {
+  if (value === undefined) {
+    return undefined
+  }
+
+  if (!isRecord(value)) {
+    throw new Error("auto-resume config must contain a rulesSync object")
+  }
+
+  const result: RulesSyncConfig = {}
+
+  if (value.enabled !== undefined) {
+    if (typeof value.enabled !== "boolean") {
+      throw new Error("auto-resume config rulesSync.enabled must be a boolean")
+    }
+    result.enabled = value.enabled
+  }
+
+  if (value.intervalMs !== undefined) {
+    if (typeof value.intervalMs !== "number" || !Number.isFinite(value.intervalMs) || value.intervalMs <= 0) {
+      throw new Error("auto-resume config rulesSync.intervalMs must be a positive number")
+    }
+    result.intervalMs = value.intervalMs
+  }
+
+  if (value.sources !== undefined) {
+    if (!Array.isArray(value.sources) || value.sources.some((item) => typeof item !== "string" || item.length === 0)) {
+      throw new Error("auto-resume config rulesSync.sources must be a string array")
+    }
+
+    result.sources = [...value.sources]
+  }
+
+  if (value.githubMirror !== undefined) {
+    if (!isRecord(value.githubMirror)) {
+      throw new Error("auto-resume config rulesSync.githubMirror must be an object")
+    }
+
+    const githubMirror: RulesSyncConfig["githubMirror"] = {}
+
+    if (value.githubMirror.enabled !== undefined) {
+      if (typeof value.githubMirror.enabled !== "boolean") {
+        throw new Error("auto-resume config rulesSync.githubMirror.enabled must be a boolean")
+      }
+      githubMirror.enabled = value.githubMirror.enabled
+    }
+
+    if (value.githubMirror.baseUrl !== undefined) {
+      if (typeof value.githubMirror.baseUrl !== "string" || value.githubMirror.baseUrl.trim().length === 0) {
+        throw new Error("auto-resume config rulesSync.githubMirror.baseUrl must be a non-empty string")
+      }
+
+      githubMirror.baseUrl = value.githubMirror.baseUrl
+    }
+
+    result.githubMirror = githubMirror
+  }
+
+  return result
+}
+
+function normalizeRule(rule: unknown, index: number): RecoveryRule {
+  if (!isRecord(rule)) {
+    throw new Error(`Invalid rule at index ${index}`)
+  }
+
+  return rule as RecoveryRule
+}
+
+function parseJsonc(text: string): RecordLike {
   const parsed = JSON.parse(stripJsonc(text))
   if (!isRecord(parsed)) {
     throw new Error("auto-resume config must be an object")
   }
 
+  return parsed
+}
+
+export function parseAutoResumeRuntimeConfig(text: string): AutoResumeRuntimeConfig {
+  const parsed = parseJsonc(text)
   const safeToolNames = normalizeSafeToolNames(parsed.safeToolNames)
-  const rules = parsed.rules
-  if (!Array.isArray(rules)) {
-    throw new Error("auto-resume config must contain a rules array")
-  }
 
   return {
     safeToolNames,
-    rules: rules.map((rule, index) => normalizeRule(rule, index)),
+    rulesSync: normalizeRulesSync(parsed.rulesSync),
   }
 }
 
-export function loadAutoResumeConfigFile(path: string | URL = DEFAULT_CONFIG_URL): AutoResumeConfig {
-  return parseAutoResumeConfig(readFileSync(path, "utf8"))
+export function parseAutoResumeRulesFile(text: string): RecoveryRule[] {
+  const parsed = parseJsonc(text)
+  const rules = parsed.rules
+  if (!Array.isArray(rules)) {
+    throw new Error("auto-resume rules file must contain a rules array")
+  }
+
+  return rules.map((rule, index) => normalizeRule(rule, index))
+}
+
+export function loadAutoResumeRuntimeConfigFile(path: string | URL | undefined = DEFAULT_RUNTIME_CONFIG_URL): AutoResumeRuntimeConfig {
+  const resolvedPath = path ?? DEFAULT_RUNTIME_CONFIG_URL
+  return parseAutoResumeRuntimeConfig(readFileSync(resolvedPath, "utf8"))
+}
+
+export function loadAutoResumeRulesFile(path: string | URL | undefined = DEFAULT_RULES_CONFIG_URL): RecoveryRule[] {
+  const resolvedPath = path ?? DEFAULT_RULES_CONFIG_URL
+  return parseAutoResumeRulesFile(readFileSync(resolvedPath, "utf8"))
+}
+
+function tryLoadAutoResumeRulesFile(path: string | URL | undefined): RecoveryRule[] | undefined {
+  try {
+    return loadAutoResumeRulesFile(path)
+  } catch {
+    return undefined
+  }
+}
+
+export type LoadAutoResumeConfigOptions = {
+  cachePath?: string | URL
+  rulesPath?: string | URL
+}
+
+export function loadAutoResumeConfigFile(
+  path: string | URL | undefined = DEFAULT_RUNTIME_CONFIG_URL,
+  options: LoadAutoResumeConfigOptions = {},
+): AutoResumeConfig {
+  const runtimeConfig = loadAutoResumeRuntimeConfigFile(path)
+  const rulesPath = options.rulesPath ?? DEFAULT_RULES_CONFIG_URL
+  const cachePath = options.cachePath ?? DEFAULT_RULES_CACHE_PATH
+  const rules = runtimeConfig.rulesSync?.enabled
+    ? tryLoadAutoResumeRulesFile(cachePath) ?? loadAutoResumeRulesFile(rulesPath)
+    : loadAutoResumeRulesFile(rulesPath)
+
+  return {
+    ...runtimeConfig,
+    rules,
+  }
 }

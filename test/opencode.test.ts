@@ -1,5 +1,8 @@
 import test from "node:test"
 import assert from "node:assert/strict"
+import { mkdtemp } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
 import { createOpenCodeAdapter } from "../src/opencode.js"
 
@@ -70,6 +73,23 @@ function createTimers() {
   }
 }
 
+function createManualTimers() {
+  const scheduled: Array<{ callback: () => void | Promise<void>; delay: number }> = []
+
+  return {
+    scheduled,
+    timers: {
+      setTimeout(callback: () => void | Promise<void>, delay: number): TimerHandle {
+        scheduled.push({ callback, delay })
+        return { id: scheduled.length }
+      },
+      clearTimeout() {
+        return undefined
+      },
+    },
+  }
+}
+
 function createDeferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void
   let reject!: (reason?: unknown) => void
@@ -119,6 +139,73 @@ function createClient(options: {
     },
   }
 }
+
+test("session.error picks up refreshed sync rules", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-opencode-sync-"))
+  const cachePath = join(tempDir, "auto-resume.rules.cache.jsonc")
+  const prompts: PromptCall[] = []
+  const fetchCalls: string[] = []
+  const { scheduled, timers } = createManualTimers()
+
+  const adapter = createOpenCodeAdapter({
+    client: createClient({
+      session: { id: "ses_sync" },
+      prompts,
+    }) as any,
+    config: {
+      rulesSync: {
+        enabled: true,
+        intervalMs: 1234,
+        sources: ["https://example.com/auto-resume.rules.jsonc"],
+      },
+    },
+    fetch: async (input) => {
+      fetchCalls.push(String(input))
+      return new Response(`{
+  "rules": [
+    {
+      "id": "synced-rule",
+      "scope": "all",
+      "match": { "messageRegex": "synced-only-error" },
+      "action": { "type": "prompt", "text": "RESUME" },
+      "retry": { "baseMs": 5, "factor": 2, "maxMs": 5, "maxAttempts": 1 }
+    }
+  ]
+}`)
+    },
+    rulesCachePath: cachePath,
+    timers: timers as any,
+  })
+
+  assert.equal(scheduled.length, 1)
+  assert.equal(scheduled[0].delay, 0)
+
+  await scheduled[0].callback()
+
+  assert.equal(fetchCalls.length, 1)
+  assert.ok(scheduled.length >= 2)
+
+  const handleEventPromise = adapter.handleEvent({
+    type: "session.error",
+    properties: {
+      sessionID: "ses_sync",
+      error: { name: "UnknownError", data: { message: "synced-only-error" } },
+    },
+  })
+
+  await handleEventPromise
+
+  assert.equal(prompts.length, 0)
+
+  const recoveryTimer = scheduled.find((timer) => timer.delay === 5)
+  assert.ok(recoveryTimer)
+
+  await recoveryTimer!.callback()
+
+  assert.equal(prompts.length, 1)
+  assert.equal(prompts[0].path.id, "ses_sync")
+  assert.equal(prompts[0].body.parts[0].text, "RESUME")
+})
 
 test("session.error with a read-only turn replays the original user request", async () => {
   const prompts: PromptCall[] = []
