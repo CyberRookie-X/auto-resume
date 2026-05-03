@@ -42,7 +42,27 @@ function runChecked(command: string, args: string[], cwd: string): void {
   assert.equal(result.status, 0, result.stderr || result.stdout)
 }
 
-function assertRuntimeReadme(readme: string): void {
+function extractFencedBlocks(readme: string): string[] {
+  const blocks: string[] = []
+  const pattern = /```(?:[a-z]+)?\n([\s\S]*?)\n```/g
+
+  for (const match of readme.matchAll(pattern)) {
+    blocks.push(match[1].trim())
+  }
+
+  return blocks
+}
+
+async function assertRuntimeReadme(readme: string): Promise<void> {
+  const expected = {
+    opencode: JSON.parse(await readFile(join(repoRoot, "opencode.json"), "utf8")),
+    claudePlugin: JSON.parse(await readFile(join(repoRoot, ".claude-plugin", "plugin.json"), "utf8")),
+    claudeMarketplace: JSON.parse(await readFile(join(repoRoot, ".claude-plugin", "marketplace.json"), "utf8")),
+    claudeSettings: JSON.parse(await readFile(join(repoRoot, ".claude", "settings.json"), "utf8")),
+    codexPlugin: JSON.parse(await readFile(join(repoRoot, ".codex-plugin", "plugin.json"), "utf8")),
+    hooks: JSON.parse(await readFile(join(repoRoot, "hooks", "hooks.json"), "utf8")),
+  }
+
   const orderedSections = ["### OpenCode", "### Claude Code", "### Codex", "### Offline fallback"]
   let previousIndex = -1
 
@@ -53,37 +73,32 @@ function assertRuntimeReadme(readme: string): void {
     previousIndex = index
   }
 
-  const requiredSnippets = [
-    "Use the native plugin flow first:",
-    "Tell OpenCode:",
-    "Tell Claude Code:",
-    "Tell Codex:",
-    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md",
-    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md",
-    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md",
-    '"$schema": "https://opencode.ai/config.json"',
-    '"plugin": ["./"]',
-    '"hooks": "./hooks/hooks.json"',
-    '"auto-resume-marketplace"',
-    '"extraKnownMarketplaces"',
-    '"enabledPlugins"',
-    '"auto-resume@auto-resume-marketplace": true',
-    '"description": "Codex recovery hooks for auto-resume"',
-    '"command": "node \\\"${CLAUDE_PLUGIN_ROOT}/hooks/auto-resume-hook.js\\\""',
-    '"timeout": 30',
-    "## Configuration Reference",
-    "`opencode.json`",
-    "`.claude-plugin/plugin.json`",
-    "`.claude-plugin/marketplace.json`",
-    "`.claude/settings.json`",
-    "`.codex-plugin/plugin.json`",
-    "`hooks/hooks.json`",
-    "`install.sh` is the offline fallback when you need to unpack a runtime tarball manually.",
-  ]
+  assert.ok(readme.includes("Use the native plugin flow first:"), "missing install intro")
+  assert.ok(readme.includes("Tell OpenCode:"), "missing OpenCode prompt")
+  assert.ok(readme.includes("Tell Claude Code:"), "missing Claude Code prompt")
+  assert.ok(readme.includes("Tell Codex:"), "missing Codex prompt")
+  assert.ok(readme.includes("## Configuration Reference"), "missing configuration reference")
+  assert.ok(readme.includes("`opencode.json`"), "missing OpenCode config index")
+  assert.ok(readme.includes("`.claude-plugin/plugin.json`"), "missing Claude plugin config index")
+  assert.ok(readme.includes("`.claude-plugin/marketplace.json`"), "missing Claude marketplace config index")
+  assert.ok(readme.includes("`.claude/settings.json`"), "missing Claude settings config index")
+  assert.ok(readme.includes("`.codex-plugin/plugin.json`"), "missing Codex plugin config index")
+  assert.ok(readme.includes("`hooks/hooks.json`"), "missing shared hook map index")
+  assert.ok(readme.includes("`install.sh` is the offline fallback when you need to unpack a runtime tarball manually."), "missing fallback guidance")
 
-  for (const snippet of requiredSnippets) {
-    assert.equal(readme.includes(snippet), true, `missing README snippet: ${snippet}`)
-  }
+  const installSection = readme.slice(readme.indexOf("Use the native plugin flow first:"), readme.indexOf("## Configuration Reference"))
+  const blocks = extractFencedBlocks(installSection)
+  assert.equal(blocks.length, 10, "README should have 10 fenced blocks")
+  assert.equal(blocks[0], "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md")
+  assert.deepEqual(JSON.parse(blocks[1]), expected.opencode)
+  assert.equal(blocks[2], "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md")
+  assert.deepEqual(JSON.parse(blocks[3]), expected.claudePlugin)
+  assert.deepEqual(JSON.parse(blocks[4]), expected.claudeMarketplace)
+  assert.deepEqual(JSON.parse(blocks[5]), expected.claudeSettings)
+  assert.equal(blocks[6], "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md")
+  assert.deepEqual(JSON.parse(blocks[7]), expected.codexPlugin)
+  assert.deepEqual(JSON.parse(blocks[8]), expected.hooks)
+  assert.equal(blocks[9], "./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume")
 }
 
 test("install script lays out a local runtime tree", async () => {
@@ -140,7 +155,7 @@ exit 45
     assert.equal(runtimePackage.main, "dist/opencode.js")
 
     const runtimeReadme = await readFile(join(targetDir, "README.md"), "utf8")
-    assertRuntimeReadme(runtimeReadme)
+    await assertRuntimeReadme(runtimeReadme)
 
     const runtimeEnv = {
       ...process.env,
