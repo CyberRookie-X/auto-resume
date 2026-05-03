@@ -67,6 +67,50 @@ function runHookCommand(
   })
 }
 
+function assertRuntimeReadme(readme: string): void {
+  const orderedSections = ["### OpenCode", "### Claude Code", "### Codex", "### Offline fallback"]
+  let previousIndex = -1
+
+  for (const section of orderedSections) {
+    const index = readme.indexOf(section)
+    assert.ok(index !== -1, `missing README section: ${section}`)
+    assert.ok(index > previousIndex, `README section out of order: ${section}`)
+    previousIndex = index
+  }
+
+  const requiredSnippets = [
+    "Use the native plugin flow first:",
+    "Tell OpenCode:",
+    "Tell Claude Code:",
+    "Tell Codex:",
+    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md",
+    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md",
+    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md",
+    '"$schema": "https://opencode.ai/config.json"',
+    '"plugin": ["./"]',
+    '"hooks": "./hooks/hooks.json"',
+    '"auto-resume-marketplace"',
+    '"extraKnownMarketplaces"',
+    '"enabledPlugins"',
+    '"auto-resume@auto-resume-marketplace": true',
+    '"description": "Codex recovery hooks for auto-resume"',
+    '"command": "node \\\"${CLAUDE_PLUGIN_ROOT}/hooks/auto-resume-hook.js\\\""',
+    '"timeout": 30',
+    "## Configuration Reference",
+    "`opencode.json`",
+    "`.claude-plugin/plugin.json`",
+    "`.claude-plugin/marketplace.json`",
+    "`.claude/settings.json`",
+    "`.codex-plugin/plugin.json`",
+    "`hooks/hooks.json`",
+    "`install.sh` is the offline fallback when you need to unpack a runtime tarball manually.",
+  ]
+
+  for (const snippet of requiredSnippets) {
+    assert.equal(readme.includes(snippet), true, `missing README snippet: ${snippet}`)
+  }
+}
+
 test("runtime release tarball includes release-safe launchers and assets", async () => {
   const releaseDir = await mkdtemp(join(tmpdir(), "auto-resume-release-"))
   const releaseTarball = join(releaseDir, "auto-resume-runtime.tar.gz")
@@ -127,26 +171,7 @@ test("runtime release tarball includes release-safe launchers and assets", async
       extractTarball(releaseTarball, extractDir)
 
       const runtimeReadme = await readFile(join(extractDir, "README.md"), "utf8")
-      assert.equal(runtimeReadme.includes("Use the native plugin flow first:"), true)
-      assert.equal(
-        runtimeReadme.includes(
-          'OpenCode loads this checkout directly from `opencode.json` with `plugin: ["./"]`.',
-        ),
-        true,
-      )
-      assert.equal(runtimeReadme.includes("## Configuration Reference"), true)
-      assert.equal(
-        runtimeReadme.includes(
-          "`.claude-plugin/plugin.json`: Claude Code reads this plugin manifest to point at `hooks/hooks.json`.",
-        ),
-        true,
-      )
-      assert.equal(
-        runtimeReadme.includes(
-          "`install.sh` is the offline fallback when you need to unpack a runtime tarball manually.",
-        ),
-        true,
-      )
+      assertRuntimeReadme(runtimeReadme)
 
       const runtimePackage = JSON.parse(await readFile(join(extractDir, "package.json"), "utf8"))
       assert.equal(runtimePackage.main, "dist/opencode.js")

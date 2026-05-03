@@ -8,16 +8,131 @@
 
 ### OpenCode
 
-- OpenCode 会通过 `opencode.json` 里的 `plugin: ["./"]` 直接加载这个 checkout。
+告诉 OpenCode：
+
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md
+```
+
+创建或更新 `opencode.json`：
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["./"]
+}
+```
+
+重启 OpenCode。
 
 ### Claude Code
 
-- Claude Code 使用 `.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json` 和 `.claude/settings.json`。
-- 该插件会以 `auto-resume@auto-resume-marketplace` 的形式启用。
+告诉 Claude Code：
+
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md
+```
+
+创建或更新这些文件：
+
+`.claude-plugin/plugin.json`
+
+```json
+{
+  "name": "auto-resume",
+  "version": "0.1.0",
+  "description": "Recovery hooks for stopped sessions",
+  "author": {
+    "name": "CyberRookie-X"
+  },
+  "hooks": "./hooks/hooks.json"
+}
+```
+
+`.claude-plugin/marketplace.json`
+
+```json
+{
+  "name": "auto-resume-marketplace",
+  "owner": {
+    "name": "CyberRookie-X"
+  },
+  "plugins": [
+    {
+      "name": "auto-resume",
+      "source": "./",
+      "description": "Recovery hooks for stopped sessions",
+      "version": "0.1.0",
+      "author": {
+        "name": "CyberRookie-X"
+      }
+    }
+  ]
+}
+```
+
+`.claude/settings.json`
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "auto-resume-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "CyberRookie-X/auto-resume"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "auto-resume@auto-resume-marketplace": true
+  }
+}
+```
+
+重启 Claude Code。
 
 ### Codex
 
-- Codex 使用 `.codex-plugin/plugin.json`，配合共享的 marketplace 元数据和 `hooks/hooks.json`。
+告诉 Codex：
+
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md
+```
+
+创建或更新这些文件：
+
+`.codex-plugin/plugin.json`
+
+```json
+{
+  "name": "auto-resume",
+  "version": "0.1.0",
+  "description": "Codex recovery hooks for auto-resume",
+  "hooks": "./hooks/hooks.json"
+}
+```
+
+`hooks/hooks.json`
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/auto-resume-hook.js\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+重启 Codex。
 
 ### 离线备用方案
 
@@ -29,12 +144,12 @@
 
 ## 配置参考
 
-- `opencode.json`：OpenCode 读取此文件以加载本地插件 checkout。
-- `.claude-plugin/plugin.json`：Claude Code 读取此插件清单，以指向 `hooks/hooks.json`。
-- `.claude-plugin/marketplace.json`：Claude Code 读取此 marketplace 定义，以将仓库暴露为 `auto-resume-marketplace`。
-- `.claude/settings.json`：Claude Code 读取此设置文件，以启用 `auto-resume@auto-resume-marketplace`。
-- `.codex-plugin/plugin.json`：Codex 读取此插件清单，以指向共享的 hook 映射。
-- `hooks/hooks.json`：Claude Code 和 Codex 读取这个共享 hook 映射，以在 `Stop` 时启动 `hooks/auto-resume-hook.js`。
+- `opencode.json`
+- `.claude-plugin/plugin.json`
+- `.claude-plugin/marketplace.json`
+- `.claude/settings.json`
+- `.codex-plugin/plugin.json`
+- `hooks/hooks.json`
 
 ## 开发
 

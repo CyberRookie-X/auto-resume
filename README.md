@@ -10,16 +10,131 @@ Use the native plugin flow first:
 
 ### OpenCode
 
-- OpenCode loads this checkout directly from `opencode.json` with `plugin: ["./"]`.
+Tell OpenCode:
+
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md
+```
+
+Create or update `opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["./"]
+}
+```
+
+Restart OpenCode.
 
 ### Claude Code
 
-- Claude Code uses `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.claude/settings.json`.
-- The plugin is enabled as `auto-resume@auto-resume-marketplace`.
+Tell Claude Code:
+
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md
+```
+
+Create or update these files:
+
+`.claude-plugin/plugin.json`
+
+```json
+{
+  "name": "auto-resume",
+  "version": "0.1.0",
+  "description": "Recovery hooks for stopped sessions",
+  "author": {
+    "name": "CyberRookie-X"
+  },
+  "hooks": "./hooks/hooks.json"
+}
+```
+
+`.claude-plugin/marketplace.json`
+
+```json
+{
+  "name": "auto-resume-marketplace",
+  "owner": {
+    "name": "CyberRookie-X"
+  },
+  "plugins": [
+    {
+      "name": "auto-resume",
+      "source": "./",
+      "description": "Recovery hooks for stopped sessions",
+      "version": "0.1.0",
+      "author": {
+        "name": "CyberRookie-X"
+      }
+    }
+  ]
+}
+```
+
+`.claude/settings.json`
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "auto-resume-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "CyberRookie-X/auto-resume"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "auto-resume@auto-resume-marketplace": true
+  }
+}
+```
+
+Restart Claude Code.
 
 ### Codex
 
-- Codex uses `.codex-plugin/plugin.json` with the shared marketplace metadata and `hooks/hooks.json`.
+Tell Codex:
+
+```text
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md
+```
+
+Create or update these files:
+
+`.codex-plugin/plugin.json`
+
+```json
+{
+  "name": "auto-resume",
+  "version": "0.1.0",
+  "description": "Codex recovery hooks for auto-resume",
+  "hooks": "./hooks/hooks.json"
+}
+```
+
+`hooks/hooks.json`
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/auto-resume-hook.js\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Restart Codex.
 
 ### Offline fallback
 
@@ -31,12 +146,12 @@ Use the native plugin flow first:
 
 ## Configuration Reference
 
-- `opencode.json`: OpenCode reads this file to load the local plugin checkout.
-- `.claude-plugin/plugin.json`: Claude Code reads this plugin manifest to point at `hooks/hooks.json`.
-- `.claude-plugin/marketplace.json`: Claude Code reads this marketplace definition to expose the repo as `auto-resume-marketplace`.
-- `.claude/settings.json`: Claude Code reads this settings file to enable `auto-resume@auto-resume-marketplace`.
-- `.codex-plugin/plugin.json`: Codex reads this plugin manifest to point at the shared hook map.
-- `hooks/hooks.json`: Claude Code and Codex read this shared hook map to launch `hooks/auto-resume-hook.js` on `Stop`.
+- `opencode.json`
+- `.claude-plugin/plugin.json`
+- `.claude-plugin/marketplace.json`
+- `.claude/settings.json`
+- `.codex-plugin/plugin.json`
+- `hooks/hooks.json`
 
 ## Development
 
