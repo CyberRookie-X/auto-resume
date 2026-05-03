@@ -1,6 +1,6 @@
 {
   "name": "auto-resume",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Recovery hooks for stopped sessions",
   "author": {
     "name": "CyberRookie-X"

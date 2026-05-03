@@ -12,7 +12,7 @@ test("OpenCode config points at the GitHub release", async () => {
   const config = JSON.parse(await readFile(join(repoRoot, "opencode.json"), "utf8"))
   const pkg = JSON.parse(await readFile(join(repoRoot, "package.json"), "utf8"))
 
-  assert.deepEqual(config.plugin, ["github:CyberRookie-X/auto-resume#v0.1.3"])
+  assert.deepEqual(config.plugin, ["github:CyberRookie-X/auto-resume#v0.1.4"])
   assert.equal(pkg.main, "src/opencode.ts")
   assert.equal(pkg.scripts.prepare, undefined)
   assert.equal(pkg.dependencies?.["auto-resume"], undefined)
