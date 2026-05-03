@@ -21,7 +21,7 @@ Create or update `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["./"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.0"]
 }
 ```
 
@@ -146,7 +146,7 @@ Restart Codex.
 
 ## Configuration Reference
 
-- `opencode.json`
+- `opencode.json`: OpenCode reads this file to load the GitHub release plugin.
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
 - `.claude/settings.json`

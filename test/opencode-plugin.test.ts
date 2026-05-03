@@ -8,11 +8,11 @@ import autoResumePlugin, { createOpenCodeAdapter } from "../src/opencode.js"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 
-test("OpenCode config points at the repository root", async () => {
+test("OpenCode config points at the GitHub release", async () => {
   const config = JSON.parse(await readFile(join(repoRoot, "opencode.json"), "utf8"))
   const pkg = JSON.parse(await readFile(join(repoRoot, "package.json"), "utf8"))
 
-  assert.deepEqual(config.plugin, ["./"])
+  assert.deepEqual(config.plugin, ["github:CyberRookie-X/auto-resume#v0.1.0"])
   assert.equal(pkg.main, "dist/opencode.js")
   assert.equal(pkg.scripts.prepare, "npm run build")
 })

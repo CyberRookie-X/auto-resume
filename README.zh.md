@@ -19,7 +19,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["./"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.0"]
 }
 ```
 
@@ -144,7 +144,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 
 ## 配置参考
 
-- `opencode.json`
+- `opencode.json`：OpenCode 读取此文件以加载 GitHub 发布版插件。
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
 - `.claude/settings.json`
