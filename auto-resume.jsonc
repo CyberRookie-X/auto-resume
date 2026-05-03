@@ -1,0 +1,86 @@
+{
+  "safeToolNames": [
+    "read",
+    "search",
+    "list",
+    "glob",
+    "grep",
+    "fetch",
+    "websearch",
+    "webfetch"
+  ],
+  "rules": [
+    {
+      // OpenCode upstream read failures and similar transport errors.
+      "id": "resume-on-stream-read-error",
+      "scope": "all",
+      "match": {
+        "messageRegex": "stream_read_error"
+      },
+      "action": {
+        "type": "prompt",
+        "text": "RESUME"
+      },
+      "retry": {
+        "baseMs": 1000,
+        "factor": 2,
+        "maxMs": 8000,
+        "maxAttempts": 3
+      }
+    },
+    {
+      // Safe turns that only produced reasoning and no tool side effects.
+      "id": "resume-on-reasoning-only-stop",
+      "scope": "all",
+      "match": {
+        "reasoningOnlyStop": true
+      },
+      "action": {
+        "type": "prompt",
+        "text": "RESUME"
+      },
+      "retry": {
+        "baseMs": 500,
+        "factor": 2,
+        "maxMs": 4000,
+        "maxAttempts": 2
+      }
+    },
+    {
+      // Stop when the host reports an interrupted tool execution that was still replay-safe.
+      "id": "resume-on-tool-abort",
+      "scope": "all",
+      "match": {
+        "toolExecutionAborted": true
+      },
+      "action": {
+        "type": "prompt",
+        "text": "RESUME"
+      },
+      "retry": {
+        "baseMs": 500,
+        "factor": 2,
+        "maxMs": 4000,
+        "maxAttempts": 2
+      }
+    },
+    {
+      // Replay turns that ended because the model hit a length limit.
+      "id": "resume-on-length-finish",
+      "scope": "all",
+      "match": {
+        "finishLengthStop": true
+      },
+      "action": {
+        "type": "prompt",
+        "text": "RESUME"
+      },
+      "retry": {
+        "baseMs": 500,
+        "factor": 2,
+        "maxMs": 4000,
+        "maxAttempts": 2
+      }
+    }
+  ]
+}

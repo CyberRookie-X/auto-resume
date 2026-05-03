@@ -148,6 +148,20 @@ test("write, shell, and unknown tool chains are unsafe", () => {
   )
 })
 
+test("custom safe tool names are honored", () => {
+  const safety = classifyReplaySafety(
+    [
+      {
+        info: { role: "assistant", id: "msg_a8" },
+        parts: [{ type: "tool", tool: "inspect", state: { status: "completed" } }],
+      },
+    ],
+    ["inspect"],
+  )
+
+  assert.equal(safety, "safe")
+})
+
 test("extractReplayRequest returns a replay body for a text-only latest user message", () => {
   const request = extractReplayRequest([
     {

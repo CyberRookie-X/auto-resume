@@ -17,6 +17,7 @@ async function assertRuntimeTree(targetDir: string): Promise<void> {
     "hooks/auto-resume-hook.js",
     "hooks/claude-hook.js",
     "hooks/codex-hook.js",
+    "auto-resume.jsonc",
     ".claude-plugin/plugin.json",
     ".claude-plugin/marketplace.json",
     ".claude/settings.json",
@@ -26,6 +27,7 @@ async function assertRuntimeTree(targetDir: string): Promise<void> {
     "dist/auto-resume-hook.js",
     "dist/claude-hook.js",
     "dist/codex-hook.js",
+    "dist/config-file.js",
   ]) {
     await expectFile(join(targetDir, relativePath))
   }
@@ -78,6 +80,7 @@ async function assertRuntimeReadme(readme: string): Promise<void> {
   assert.ok(readme.includes("Tell Claude Code:"), "missing Claude Code prompt")
   assert.ok(readme.includes("Tell Codex:"), "missing Codex prompt")
   assert.ok(readme.includes("## Configuration Reference"), "missing configuration reference")
+  assert.ok(readme.includes("`auto-resume.jsonc`"), "missing shared default config index")
   assert.ok(readme.includes("`opencode.json`"), "missing OpenCode config index")
   assert.ok(readme.includes("`.claude-plugin/plugin.json`"), "missing Claude plugin config index")
   assert.ok(readme.includes("`.claude-plugin/marketplace.json`"), "missing Claude marketplace config index")

@@ -103,6 +103,7 @@ async function assertRuntimeReadme(readme: string): Promise<void> {
   assert.ok(readme.includes("Tell Claude Code:"), "missing Claude Code prompt")
   assert.ok(readme.includes("Tell Codex:"), "missing Codex prompt")
   assert.ok(readme.includes("## Configuration Reference"), "missing configuration reference")
+  assert.ok(readme.includes("`auto-resume.jsonc`"), "missing shared default config index")
   assert.ok(readme.includes("`opencode.json`"), "missing OpenCode config index")
   assert.ok(readme.includes("`.claude-plugin/plugin.json`"), "missing Claude plugin config index")
   assert.ok(readme.includes("`.claude-plugin/marketplace.json`"), "missing Claude marketplace config index")
@@ -150,6 +151,7 @@ test("runtime release tarball includes release-safe launchers and assets", async
     const entries = listTarEntries(releaseTarball)
     const filesOnly = entries.filter((entry) => !entry.endsWith("/"))
     const expectedFiles = [
+      "auto-resume.jsonc",
       ".claude-plugin/marketplace.json",
       ".claude-plugin/plugin.json",
       ".claude/settings.json",
@@ -160,6 +162,7 @@ test("runtime release tarball includes release-safe launchers and assets", async
       "dist/claude-hook.js",
       "dist/codex-hook.js",
       "dist/codex.js",
+      "dist/config-file.js",
       "dist/config.js",
       "dist/core.js",
       "dist/index.js",

@@ -1,17 +1,7 @@
 import type { ReplayRequest, ReplaySafety } from "./types.js"
+import { DEFAULT_SAFE_TOOL_NAMES } from "./config-file.js"
 
 export type { ReplayRequest, ReplaySafety }
-
-const SAFE_TOOL_NAMES = new Set([
-  "read",
-  "search",
-  "list",
-  "glob",
-  "grep",
-  "fetch",
-  "websearch",
-  "webfetch",
-])
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
@@ -61,7 +51,11 @@ function findLastMessage(messages: readonly Record<string, unknown>[], role: str
   return undefined
 }
 
-export function classifyReplaySafety(messages: readonly Record<string, unknown>[]): ReplaySafety {
+export function classifyReplaySafety(
+  messages: readonly Record<string, unknown>[],
+  safeToolNames: readonly string[] = DEFAULT_SAFE_TOOL_NAMES,
+): ReplaySafety {
+  const safeTools = new Set(safeToolNames)
   const latestAssistantMessage = findLastMessage(messages, "assistant")
   if (!latestAssistantMessage) {
     return "unsafe"
@@ -78,7 +72,7 @@ export function classifyReplaySafety(messages: readonly Record<string, unknown>[
     }
 
     const toolName = readStringProperty(part, "tool")
-    if (!toolName || !SAFE_TOOL_NAMES.has(toolName)) {
+    if (!toolName || !safeTools.has(toolName)) {
       return "unsafe"
     }
   }

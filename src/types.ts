@@ -40,6 +40,7 @@ export type RecoveryRule = {
 }
 
 export type AutoResumeConfig = {
+  safeToolNames: string[]
   rules: RecoveryRule[]
 }
 

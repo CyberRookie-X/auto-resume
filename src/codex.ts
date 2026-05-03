@@ -1,5 +1,6 @@
 import { readFile as defaultReadFile } from "node:fs/promises"
 
+import { loadAutoResumeConfigFile } from "./config-file.js"
 import { classifyReplaySafety, extractReplayRequest } from "./replay.js"
 
 type RecordLike = Record<string, unknown>
@@ -338,6 +339,8 @@ function readTranscriptText(input: CodexHookInput | null, readFile: NonNullable<
 }
 
 function buildCodexStopOutput(input: CodexHookInput | null, transcriptText: string | undefined): CodexHookOutput {
+  const safeToolNames = loadAutoResumeConfigFile().safeToolNames
+
   if (!transcriptText) {
     return buildFallbackOutput()
   }
@@ -361,7 +364,7 @@ function buildCodexStopOutput(input: CodexHookInput | null, transcriptText: stri
     return buildStopOutput(hasAssistantMessageText ? "plain assistant completion" : undefined)
   }
 
-  if (classifyReplaySafety(currentTurn.messages) !== "safe") {
+  if (classifyReplaySafety(currentTurn.messages, safeToolNames) !== "safe") {
     return buildFallbackOutput()
   }
 

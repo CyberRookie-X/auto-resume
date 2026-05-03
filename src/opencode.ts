@@ -27,7 +27,7 @@ type TimerHandle = ReturnType<typeof globalThis.setTimeout>
 
 type AdapterOptions = {
   client: OpenCodeClient
-  config: Partial<AutoResumeConfig>
+  config?: Partial<AutoResumeConfig>
   timers?: TimerAPI
 }
 
@@ -432,9 +432,10 @@ function createRecoveryDispatcher(client: OpenCodeClient, isDeleted: (sessionID:
 }
 
 export function createOpenCodeAdapter({ client, config, timers }: AdapterOptions) {
+  const normalizedConfig = normalizeConfig(config)
   const engine = createRecoveryEngine({
     now: () => Date.now(),
-    rules: normalizeConfig(config).rules,
+    rules: normalizedConfig.rules,
   })
 
   const timerAPI: TimerAPI = timers ?? {
@@ -537,7 +538,7 @@ export function createOpenCodeAdapter({ client, config, timers }: AdapterOptions
                 return
               }
 
-              if (classifyReplaySafety(messages) === "safe") {
+              if (classifyReplaySafety(messages, normalizedConfig.safeToolNames) === "safe") {
                 replayRequest = extractReplayRequest(messages) ?? undefined
               }
             } catch {
@@ -579,7 +580,7 @@ export function createOpenCodeAdapter({ client, config, timers }: AdapterOptions
             let replayRequest: OpenCodePromptBody | undefined
 
             try {
-              if (classifyReplaySafety(messages) === "safe") {
+              if (classifyReplaySafety(messages, normalizedConfig.safeToolNames) === "safe") {
                 replayRequest = extractReplayRequest(messages) ?? undefined
               }
             } catch {
@@ -600,7 +601,7 @@ export function createOpenCodeAdapter({ client, config, timers }: AdapterOptions
   }
 }
 
-export default async function autoResumePlugin({ client, config = {}, timers }: OpenCodePluginInput) {
+export default async function autoResumePlugin({ client, config, timers }: OpenCodePluginInput) {
   const adapter = createOpenCodeAdapter({ client, config, timers })
 
   return {

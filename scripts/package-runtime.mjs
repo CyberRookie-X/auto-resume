@@ -58,6 +58,7 @@ async function main() {
   const codexPlugin = join(repoRoot, ".codex-plugin", "plugin.json")
   const readmePath = join(repoRoot, "README.md")
   const packageJsonPath = join(repoRoot, "package.json")
+  const defaultConfigPath = join(repoRoot, "auto-resume.jsonc")
 
   await assertExists(distDir, "dist/ directory. Run npm run build before packaging")
   await assertExists(hooksDir, "hooks/ directory")
@@ -66,6 +67,7 @@ async function main() {
   await assertExists(codexPlugin, ".codex-plugin/plugin.json")
   await assertExists(readmePath, "README.md")
   await assertExists(packageJsonPath, "package.json")
+  await assertExists(defaultConfigPath, "auto-resume.jsonc")
 
   await mkdir(dirname(outPath), { recursive: true })
 
@@ -82,6 +84,7 @@ async function main() {
     await cp(claudeSettings, join(stageDir, ".claude", "settings.json"))
     await cp(codexPlugin, join(stageDir, ".codex-plugin", "plugin.json"))
     await cp(readmePath, join(stageDir, "README.md"))
+    await cp(defaultConfigPath, join(stageDir, "auto-resume.jsonc"))
     await writeFile(
       join(stageDir, "package.json"),
       JSON.stringify(
@@ -107,6 +110,7 @@ async function main() {
         ".claude",
         ".claude-plugin",
         ".codex-plugin",
+        "auto-resume.jsonc",
         "README.md",
         "dist",
         "hooks",

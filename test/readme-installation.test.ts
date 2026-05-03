@@ -121,6 +121,7 @@ test("README files mirror the plugin-first install flow and configuration index"
       fallbackLine: "`install.sh` is the offline fallback when you need to unpack a runtime tarball manually.",
       configHeading: "## Configuration Reference",
       configIndexSnippets: [
+        "`auto-resume.jsonc`",
         "`opencode.json`",
         "`.claude-plugin/plugin.json`",
         "`.claude-plugin/marketplace.json`",
@@ -156,6 +157,7 @@ test("README files mirror the plugin-first install flow and configuration index"
       fallbackLine: "`install.sh` 是离线备用方案，用于需要手动解包运行时 tarball 的情况。",
       configHeading: "## 配置参考",
       configIndexSnippets: [
+        "`auto-resume.jsonc`",
         "`opencode.json`",
         "`.claude-plugin/plugin.json`",
         "`.claude-plugin/marketplace.json`",
