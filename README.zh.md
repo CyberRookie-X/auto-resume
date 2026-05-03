@@ -19,9 +19,11 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.2"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.3"]
 }
 ```
+
+OpenCode 会直接从 GitHub 加载这个插件，所以这条路径不需要本地构建，也不需要手动解包运行时 tarball。
 
 重启 OpenCode。
 
@@ -40,7 +42,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Recovery hooks for stopped sessions",
   "author": {
     "name": "CyberRookie-X"
@@ -62,7 +64,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
       "name": "auto-resume",
       "source": "./",
       "description": "Recovery hooks for stopped sessions",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "author": {
         "name": "CyberRookie-X"
       }
@@ -106,7 +108,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Codex recovery hooks for auto-resume",
   "hooks": "./hooks/hooks.json"
 }
@@ -146,7 +148,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 
 - `auto-resume.jsonc`：运行时配置、只读工具白名单和可选的规则同步开关。
 - `auto-resume.rules.jsonc`：共享的默认恢复规则。开启同步后，OpenCode 会从配置的来源刷新缓存副本。
-- `opencode.json`：OpenCode 读取此文件以加载 GitHub 发布版插件。
+- `opencode.json`：OpenCode 读取此文件以直接从仓库加载 GitHub 托管的插件。
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
 - `.claude/settings.json`

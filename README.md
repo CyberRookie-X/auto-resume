@@ -21,9 +21,11 @@ Create or update `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.2"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.3"]
 }
 ```
+
+OpenCode loads this plugin directly from GitHub, so you do not need a local build or runtime tarball for this path.
 
 Restart OpenCode.
 
@@ -42,7 +44,7 @@ Create or update these files:
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Recovery hooks for stopped sessions",
   "author": {
     "name": "CyberRookie-X"
@@ -64,7 +66,7 @@ Create or update these files:
       "name": "auto-resume",
       "source": "./",
       "description": "Recovery hooks for stopped sessions",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "author": {
         "name": "CyberRookie-X"
       }
@@ -108,7 +110,7 @@ Create or update these files:
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Codex recovery hooks for auto-resume",
   "hooks": "./hooks/hooks.json"
 }
@@ -148,7 +150,7 @@ Restart Codex.
 
 - `auto-resume.jsonc`: runtime settings, the read-only tool allow list, and optional rules sync settings.
 - `auto-resume.rules.jsonc`: shared default recovery rules. If rules sync is enabled, OpenCode refreshes a cached copy from the configured sources.
-- `opencode.json`: OpenCode reads this file to load the GitHub release plugin.
+- `opencode.json`: OpenCode reads this file to load the GitHub-hosted plugin directly from the repo.
 - `.claude-plugin/plugin.json`
 - `.claude-plugin/marketplace.json`
 - `.claude/settings.json`
