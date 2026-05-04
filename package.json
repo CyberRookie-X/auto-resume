@@ -1,10 +1,11 @@
 {
   "name": "auto-resume",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "private": true,
   "type": "module",
   "main": "src/opencode.ts",
   "scripts": {
+    "build": "tsc -p tsconfig.json",
     "test": "node --test --import tsx",
     "release:runtime": "node scripts/package-runtime.mjs --out .release/auto-resume-runtime.tar.gz"
   },
