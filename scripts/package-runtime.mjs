@@ -80,6 +80,23 @@ async function main() {
 
     await cp(distDir, join(stageDir, "dist"), { recursive: true })
     await cp(hooksDir, join(stageDir, "hooks"), { recursive: true })
+    
+    // Replace hooks/*.js wrappers to point to dist instead of src
+    const hookFiles = ["auto-resume-hook.js", "claude-hook.js", "codex-hook.js"]
+    for (const hookFile of hookFiles) {
+      const hookName = hookFile.replace(".js", "")
+      const hookContent = `#!/usr/bin/env node
+import { resolve } from "path"
+import { dirname } from "path"
+import { fileURLToPath } from "url"
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const distPath = resolve(__dirname, "../dist/${hookName}.js")
+
+await import(distPath)
+`
+      await writeFile(join(stageDir, "hooks", hookFile), hookContent)
+    }
     await cp(claudePluginDir, join(stageDir, ".claude-plugin"), { recursive: true })
     await mkdir(join(stageDir, ".claude"), { recursive: true })
     await mkdir(join(stageDir, ".codex-plugin"), { recursive: true })

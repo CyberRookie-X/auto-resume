@@ -28,8 +28,8 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Build source
-        run: npm run build
+      - name: Compile TypeScript
+        run: npx tsc -p tsconfig.json
 
       - name: Package runtime tarball
         run: npm run release:runtime

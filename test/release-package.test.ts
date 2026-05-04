@@ -133,7 +133,7 @@ test("runtime release tarball includes release-safe launchers and assets", async
   const releaseTarball = join(releaseDir, "auto-resume-runtime.tar.gz")
 
   try {
-    const build = spawnSync("npm", ["run", "build"], {
+    const build = spawnSync("npx", ["tsc", "-p", "tsconfig.json"], {
       cwd: repoRoot,
       encoding: "utf8",
     })
