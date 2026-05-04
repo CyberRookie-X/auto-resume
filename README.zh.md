@@ -8,12 +8,6 @@
 
 ### OpenCode
 
-告诉 OpenCode：
-
-```text
-Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md
-```
-
 创建或更新 `opencode.json`：
 
 ```json
@@ -37,12 +31,6 @@ OpenCode 会直接从 GitHub 加载这个插件，所以这两种写法都不需
 重启 OpenCode。
 
 ### Claude Code
-
-告诉 Claude Code：
-
-```text
-Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md
-```
 
 创建或更新这些文件：
 
@@ -104,12 +92,6 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 
 ### Codex
 
-告诉 Codex：
-
-```text
-Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md
-```
-
 创建或更新这些文件：
 
 `.codex-plugin/plugin.json`
@@ -152,6 +134,29 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```bash
 ./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume
 ```
+
+## 配置文件位置
+
+auto-resume 会从各平台的标准位置查找配置文件：
+
+### OpenCode
+- **项目级**：`.opencode/auto-resume.jsonc`（优先级最高）
+- **全局级**：`~/.config/opencode/auto-resume.jsonc`
+
+### Claude Code
+- **项目级**：`.claude/auto-resume.jsonc`（优先级最高）
+- **全局级**：`~/.claude/auto-resume.jsonc`
+
+### Codex
+- **项目级**：`.codex/auto-resume.jsonc`（优先级最高）
+- **全局级**：`~/.codex/auto-resume.jsonc`
+
+项目级配置覆盖全局级配置。如果两者都不存在，插件使用内置默认配置。
+
+详细安装说明请参考各平台的 INSTALL.md：
+- [OpenCode 安装](/.opencode/INSTALL.md)
+- [Claude Code 安装](/.claude/INSTALL.md)
+- [Codex 安装](/.codex-plugin/INSTALL.md)
 
 ## 配置参考
 

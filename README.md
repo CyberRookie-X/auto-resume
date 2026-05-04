@@ -10,12 +10,6 @@ Use the native plugin flow first:
 
 ### OpenCode
 
-Tell OpenCode:
-
-```text
-Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md
-```
-
 Create or update `opencode.json`:
 
 ```json
@@ -39,12 +33,6 @@ OpenCode loads this plugin directly from GitHub, so you do not need a local buil
 Restart OpenCode.
 
 ### Claude Code
-
-Tell Claude Code:
-
-```text
-Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md
-```
 
 Create or update these files:
 
@@ -106,12 +94,6 @@ Restart Claude Code.
 
 ### Codex
 
-Tell Codex:
-
-```text
-Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md
-```
-
 Create or update these files:
 
 `.codex-plugin/plugin.json`
@@ -154,6 +136,29 @@ Restart Codex.
 ```bash
 ./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume
 ```
+
+## Configuration File Locations
+
+auto-resume looks for configuration files in standard platform-specific locations:
+
+### OpenCode
+- **Project-level**: `.opencode/auto-resume.jsonc` (highest priority)
+- **Global-level**: `~/.config/opencode/auto-resume.jsonc`
+
+### Claude Code
+- **Project-level**: `.claude/auto-resume.jsonc` (highest priority)
+- **Global-level**: `~/.claude/auto-resume.jsonc`
+
+### Codex
+- **Project-level**: `.codex/auto-resume.jsonc` (highest priority)
+- **Global-level**: `~/.codex/auto-resume.jsonc`
+
+Project-level config overrides global-level config. If neither exists, the plugin uses built-in defaults.
+
+See platform-specific INSTALL.md files for detailed setup instructions:
+- [OpenCode Installation](/.opencode/INSTALL.md)
+- [Claude Code Installation](/.claude/INSTALL.md)
+- [Codex Installation](/.codex-plugin/INSTALL.md)
 
 ## Configuration Reference
 
