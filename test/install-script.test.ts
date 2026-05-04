@@ -85,9 +85,6 @@ async function assertRuntimeReadme(readme: string): Promise<void> {
   }
 
   assert.ok(readme.includes("Use the native plugin flow first:"), "missing install intro")
-  assert.ok(readme.includes("Tell OpenCode:"), "missing OpenCode prompt")
-  assert.ok(readme.includes("Tell Claude Code:"), "missing Claude Code prompt")
-  assert.ok(readme.includes("Tell Codex:"), "missing Codex prompt")
   assert.ok(readme.includes(`github:CyberRookie-X/auto-resume#v${pkg.version}`), "missing pinned version option")
   assert.ok(readme.includes("## Configuration Reference"), "missing configuration reference")
   assert.ok(readme.includes("`auto-resume.jsonc`"), "missing shared default config index")
@@ -99,20 +96,17 @@ async function assertRuntimeReadme(readme: string): Promise<void> {
   assert.ok(readme.includes("`hooks/hooks.json`"), "missing shared hook map index")
   assert.ok(readme.includes("`install.sh` is the offline fallback when you need to unpack a runtime tarball manually."), "missing fallback guidance")
 
-  const installSection = readme.slice(readme.indexOf("Use the native plugin flow first:"), readme.indexOf("## Configuration Reference"))
+  const installSection = readme.slice(readme.indexOf("Use the native plugin flow first:"), readme.indexOf("## Configuration File Locations"))
   const blocks = extractFencedBlocks(installSection)
-  assert.equal(blocks.length, 11, "README should have 11 fenced blocks")
-  assert.equal(blocks[0], "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md")
-  assert.deepEqual(JSON.parse(blocks[1]), expected.opencodeMain)
-  assert.deepEqual(JSON.parse(blocks[2]), expected.opencodePinned)
-  assert.equal(blocks[3], "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md")
-  assert.deepEqual(JSON.parse(blocks[4]), expected.claudePlugin)
-  assert.deepEqual(JSON.parse(blocks[5]), expected.claudeMarketplace)
-  assert.deepEqual(JSON.parse(blocks[6]), expected.claudeSettings)
-  assert.equal(blocks[7], "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md")
-  assert.deepEqual(JSON.parse(blocks[8]), expected.codexPlugin)
-  assert.deepEqual(JSON.parse(blocks[9]), expected.hooks)
-  assert.equal(blocks[10], "./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume")
+  assert.equal(blocks.length, 8, "README should have 8 fenced blocks")
+  assert.deepEqual(JSON.parse(blocks[0]), expected.opencodeMain)
+  assert.deepEqual(JSON.parse(blocks[1]), expected.opencodePinned)
+  assert.deepEqual(JSON.parse(blocks[2]), expected.claudePlugin)
+assert.deepEqual(JSON.parse(blocks[3]), expected.claudeMarketplace)
+  assert.deepEqual(JSON.parse(blocks[4]), expected.claudeSettings)
+  assert.deepEqual(JSON.parse(blocks[5]), expected.codexPlugin)
+  assert.deepEqual(JSON.parse(blocks[6]), expected.hooks)
+  assert.equal(blocks[7], "./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume")
 }
 
 test("install script lays out a local runtime tree", async () => {

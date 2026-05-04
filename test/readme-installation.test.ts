@@ -7,16 +7,8 @@ import { fileURLToPath } from "node:url"
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 
 const rawInstallSnippets = {
-  en: [
-    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md",
-    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md",
-    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md",
-  ],
-  zh: [
-    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md",
-    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md",
-    "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md",
-  ],
+  en: [],
+  zh: [],
 }
 
 function extractFencedBlocks(readme: string): string[] {
@@ -66,24 +58,18 @@ function assertInstallReadme(
   spec: {
     path: string
     installIntro: string
-    openCodePrompt: string
-    claudePrompt: string
-    codexPrompt: string
     fallbackHeading: string
     fallbackLine: string
     configHeading: string
-  configIndexSnippets: string[]
-  legacySnippets: string[]
-  labelSnippets: string[]
-  language: "en" | "zh"
+    configIndexSnippets: string[]
+    legacySnippets: string[]
+    labelSnippets: string[]
+    language: "en" | "zh"
 },
-expected: Awaited<ReturnType<typeof loadExpectedJson>>,
+  expected: Awaited<ReturnType<typeof loadExpectedJson>>,
 ): void {
   assert.ok(readme.includes(spec.installIntro), `${spec.path} missing install intro`)
   assertOrdered(readme, ["### OpenCode", "### Claude Code", "### Codex", spec.fallbackHeading], spec.path)
-  assert.ok(readme.includes(spec.openCodePrompt), `${spec.path} missing OpenCode prompt`)
-  assert.ok(readme.includes(spec.claudePrompt), `${spec.path} missing Claude Code prompt`)
-  assert.ok(readme.includes(spec.codexPrompt), `${spec.path} missing Codex prompt`)
   assert.ok(readme.includes(spec.fallbackLine), `${spec.path} missing fallback install.sh guidance`)
   assert.ok(readme.includes(spec.configHeading), `${spec.path} missing configuration index`)
 
@@ -102,19 +88,16 @@ expected: Awaited<ReturnType<typeof loadExpectedJson>>,
   const installStart = readme.indexOf(spec.installIntro)
   const installEnd = readme.indexOf(spec.configHeading)
   const blocks = extractFencedBlocks(readme.slice(installStart, installEnd))
-  assert.equal(blocks.length, 11, `${spec.path} should have 11 fenced blocks`)
+  assert.equal(blocks.length, 8, `${spec.path} should have 8 fenced blocks`)
 
-  assert.equal(blocks[0], rawInstallSnippets[spec.language][0])
-  assert.deepEqual(JSON.parse(blocks[1]), expected.opencodeMain)
-  assert.deepEqual(JSON.parse(blocks[2]), expected.opencodePinned)
-  assert.equal(blocks[3], rawInstallSnippets[spec.language][1])
-  assert.deepEqual(JSON.parse(blocks[4]), expected.claudePlugin)
-  assert.deepEqual(JSON.parse(blocks[5]), expected.claudeMarketplace)
-  assert.deepEqual(JSON.parse(blocks[6]), expected.claudeSettings)
-  assert.equal(blocks[7], rawInstallSnippets[spec.language][2])
-  assert.deepEqual(JSON.parse(blocks[8]), expected.codexPlugin)
-  assert.deepEqual(JSON.parse(blocks[9]), expected.hooks)
-  assert.equal(blocks[10], "./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume")
+  assert.deepEqual(JSON.parse(blocks[0]), expected.opencodeMain)
+  assert.deepEqual(JSON.parse(blocks[1]), expected.opencodePinned)
+  assert.deepEqual(JSON.parse(blocks[2]), expected.claudePlugin)
+  assert.deepEqual(JSON.parse(blocks[3]), expected.claudeMarketplace)
+  assert.deepEqual(JSON.parse(blocks[4]), expected.claudeSettings)
+  assert.deepEqual(JSON.parse(blocks[5]), expected.codexPlugin)
+  assert.deepEqual(JSON.parse(blocks[6]), expected.hooks)
+  assert.equal(blocks[7], "./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume")
 }
 
 test("README files mirror the plugin-first install flow and configuration index", async () => {
@@ -124,9 +107,6 @@ test("README files mirror the plugin-first install flow and configuration index"
     {
       path: "README.md",
       installIntro: "Use the native plugin flow first:",
-      openCodePrompt: "Tell OpenCode:",
-      claudePrompt: "Tell Claude Code:",
-      codexPrompt: "Tell Codex:",
       fallbackHeading: "### Offline fallback",
       fallbackLine: "`install.sh` is the offline fallback when you need to unpack a runtime tarball manually.",
       configHeading: "## Configuration Reference",
@@ -162,9 +142,6 @@ test("README files mirror the plugin-first install flow and configuration index"
     {
       path: "README.zh.md",
       installIntro: "优先使用各客户端的原生插件安装方式：",
-      openCodePrompt: "告诉 OpenCode：",
-      claudePrompt: "告诉 Claude Code：",
-      codexPrompt: "告诉 Codex：",
       fallbackHeading: "### 离线备用方案",
       fallbackLine: "`install.sh` 是离线备用方案，用于需要手动解包运行时 tarball 的情况。",
       configHeading: "## 配置参考",
