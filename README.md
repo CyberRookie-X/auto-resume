@@ -21,11 +21,20 @@ Create or update `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
+  "plugin": ["github:CyberRookie-X/auto-resume#main"]
+}
+```
+
+To pin a release instead:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
   "plugin": ["github:CyberRookie-X/auto-resume#v0.1.29"]
 }
 ```
 
-OpenCode loads this plugin directly from GitHub, so you do not need a local build or runtime tarball for this path.
+OpenCode loads this plugin directly from GitHub, so you do not need a local build or runtime tarball for either choice.
 
 Restart OpenCode.
 

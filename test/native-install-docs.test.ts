@@ -33,7 +33,7 @@ test("host INSTALL docs expose raw fetch instructions and copyable configs", asy
   const hooksJson = await readFile(join(repoRoot, "hooks", "hooks.json"), "utf8")
   const expectedOpenCode = {
     "$schema": "https://opencode.ai/config.json",
-    plugin: [`github:CyberRookie-X/auto-resume#v${pkg.version}`],
+    plugin: ["github:CyberRookie-X/auto-resume#main"],
   }
 
   assert.match(
@@ -42,6 +42,7 @@ test("host INSTALL docs expose raw fetch instructions and copyable configs", asy
   )
   assert.equal(extractFencedBlocks(opencode)[0], "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md")
   assertJsonBlock(opencode, 1, expectedOpenCode)
+  assert.match(opencode, /github:CyberRookie-X\/auto-resume#v0\.1\.29/)
 
   assert.match(
     claude,

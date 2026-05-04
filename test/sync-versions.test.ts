@@ -56,7 +56,7 @@ test("sync-versions updates Claude and Codex version fields", async () => {
     assert.equal(result.status, 0, result.stderr || result.stdout)
 
     const opencode = JSON.parse(await readFile(join(tempRoot, "opencode.json"), "utf8"))
-    assert.deepEqual(opencode.plugin, ["github:CyberRookie-X/auto-resume#v9.9.9"])
+    assert.deepEqual(opencode.plugin, ["github:CyberRookie-X/auto-resume#main"])
 
     const claudePlugin = JSON.parse(await readFile(join(tempRoot, ".claude-plugin", "plugin.json"), "utf8"))
     assert.equal(claudePlugin.version, "9.9.9")

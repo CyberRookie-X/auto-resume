@@ -19,11 +19,20 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
+  "plugin": ["github:CyberRookie-X/auto-resume#main"]
+}
+```
+
+如需固定到某个版本：
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
   "plugin": ["github:CyberRookie-X/auto-resume#v0.1.29"]
 }
 ```
 
-OpenCode 会直接从 GitHub 加载这个插件，所以这条路径不需要本地构建，也不需要手动解包运行时 tarball。
+OpenCode 会直接从 GitHub 加载这个插件，所以这两种写法都不需要本地构建，也不需要手动解包运行时 tarball。
 
 重启 OpenCode。
 

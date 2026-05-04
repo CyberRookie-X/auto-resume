@@ -45,7 +45,11 @@ async function loadExpectedJson() {
   const pkg = JSON.parse(await readFile(join(repoRoot, "package.json"), "utf8"))
 
   return {
-    opencode: {
+    opencodeMain: {
+      "$schema": "https://opencode.ai/config.json",
+      plugin: ["github:CyberRookie-X/auto-resume#main"],
+    },
+    opencodePinned: {
       "$schema": "https://opencode.ai/config.json",
       plugin: [`github:CyberRookie-X/auto-resume#v${pkg.version}`],
     },
@@ -98,18 +102,19 @@ expected: Awaited<ReturnType<typeof loadExpectedJson>>,
   const installStart = readme.indexOf(spec.installIntro)
   const installEnd = readme.indexOf(spec.configHeading)
   const blocks = extractFencedBlocks(readme.slice(installStart, installEnd))
-  assert.equal(blocks.length, 10, `${spec.path} should have 10 fenced blocks`)
+  assert.equal(blocks.length, 11, `${spec.path} should have 11 fenced blocks`)
 
   assert.equal(blocks[0], rawInstallSnippets[spec.language][0])
-  assert.deepEqual(JSON.parse(blocks[1]), expected.opencode)
-  assert.equal(blocks[2], rawInstallSnippets[spec.language][1])
-  assert.deepEqual(JSON.parse(blocks[3]), expected.claudePlugin)
-  assert.deepEqual(JSON.parse(blocks[4]), expected.claudeMarketplace)
-  assert.deepEqual(JSON.parse(blocks[5]), expected.claudeSettings)
-  assert.equal(blocks[6], rawInstallSnippets[spec.language][2])
-  assert.deepEqual(JSON.parse(blocks[7]), expected.codexPlugin)
-  assert.deepEqual(JSON.parse(blocks[8]), expected.hooks)
-  assert.equal(blocks[9], "./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume")
+  assert.deepEqual(JSON.parse(blocks[1]), expected.opencodeMain)
+  assert.deepEqual(JSON.parse(blocks[2]), expected.opencodePinned)
+  assert.equal(blocks[3], rawInstallSnippets[spec.language][1])
+  assert.deepEqual(JSON.parse(blocks[4]), expected.claudePlugin)
+  assert.deepEqual(JSON.parse(blocks[5]), expected.claudeMarketplace)
+  assert.deepEqual(JSON.parse(blocks[6]), expected.claudeSettings)
+  assert.equal(blocks[7], rawInstallSnippets[spec.language][2])
+  assert.deepEqual(JSON.parse(blocks[8]), expected.codexPlugin)
+  assert.deepEqual(JSON.parse(blocks[9]), expected.hooks)
+  assert.equal(blocks[10], "./install.sh --tarball /path/to/auto-resume-runtime.tar.gz --target /path/to/auto-resume")
 }
 
 test("README files mirror the plugin-first install flow and configuration index", async () => {
@@ -141,6 +146,7 @@ test("README files mirror the plugin-first install flow and configuration index"
         "Claude Code reads this marketplace definition to expose the repo as `auto-resume-marketplace`.",
         "Claude Code reads this settings file to enable `auto-resume@auto-resume-marketplace`.",
         "Codex reads this plugin manifest to point at the shared hook map.",
+        "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/dev/.opencode/INSTALL.md",
       ],
       labelSnippets: [
         "Create or update `opencode.json`:",
@@ -176,6 +182,7 @@ test("README files mirror the plugin-first install flow and configuration index"
         "所有运行时共享的默认恢复规则和只读工具白名单。",
         "Claude Code 使用 `.claude-plugin/plugin.json`、`.claude-plugin/marketplace.json` 和 `.claude/settings.json`。",
         "Codex 使用 `.codex-plugin/plugin.json`，配合共享的 marketplace 元数据和 `hooks/hooks.json`。",
+        "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/dev/.opencode/INSTALL.md",
       ],
       labelSnippets: [
         "创建或更新 `opencode.json`：",

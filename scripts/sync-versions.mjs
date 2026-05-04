@@ -12,7 +12,7 @@ async function main() {
   // Update opencode.json
   const opencodePath = join(repoRoot, "opencode.json")
   const opencode = JSON.parse(await readFile(opencodePath, "utf8"))
-  opencode.plugin[0] = `github:CyberRookie-X/auto-resume#v${version}`
+  opencode.plugin[0] = `github:CyberRookie-X/auto-resume#main`
   await writeFile(opencodePath, JSON.stringify(opencode, null, 2) + "\n")
   console.log("✓ opencode.json")
 

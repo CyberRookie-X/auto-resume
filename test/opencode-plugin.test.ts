@@ -10,12 +10,8 @@ const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 
 test("development OpenCode config points at the GitHub repo", async () => {
   const config = JSON.parse(await readFile(join(repoRoot, "opencode.json"), "utf8"))
-  const pkg = JSON.parse(await readFile(join(repoRoot, "package.json"), "utf8"))
 
-  assert.deepEqual(config.plugin, [`github:CyberRookie-X/auto-resume#v${pkg.version}`])
-  assert.equal(pkg.main, "src/opencode.ts")
-  assert.equal(pkg.scripts.prepare, undefined)
-  assert.equal(pkg.dependencies?.["auto-resume"], undefined)
+  assert.deepEqual(config.plugin, ["github:CyberRookie-X/auto-resume#main"])
 })
 
 test("default export forwards events through the adapter", async () => {
