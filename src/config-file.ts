@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
 
@@ -11,7 +11,55 @@ export const DEFAULT_RULES_SOURCE_URL = "https://raw.githubusercontent.com/Cyber
 export const DEFAULT_GITHUB_MIRROR_BASE_URL = "https://ghfast.top"
 export const DEFAULT_SAFE_TOOL_NAMES = ["read", "search", "list", "glob", "grep", "fetch", "websearch", "webfetch"] as const
 
+export type Platform = "opencode" | "claude" | "codex"
+
 type RecordLike = Record<string, unknown>
+
+function getPlatformConfigDirs(platform: Platform, cwd: string = process.cwd()): string[] {
+  const home = homedir()
+  
+  const projectDir = platform === "opencode" 
+    ? ".opencode" 
+    : platform === "claude" 
+    ? ".claude" 
+    : ".codex"
+  
+  const globalDirs: string[] = []
+  
+  if (platform === "opencode") {
+    globalDirs.push(join(home, ".config", "opencode"))
+  } else if (platform === "claude") {
+    globalDirs.push(join(home, ".claude"))
+    const xdgConfigHome = process.env.XDG_CONFIG_HOME
+    if (xdgConfigHome) {
+      globalDirs.push(join(xdgConfigHome, "claude"))
+    }
+  } else if (platform === "codex") {
+    globalDirs.push(join(home, ".codex"))
+  }
+  
+  const candidates: string[] = []
+  
+  candidates.push(join(cwd, projectDir, "auto-resume.jsonc"))
+  
+  for (const globalDir of globalDirs) {
+    candidates.push(join(globalDir, "auto-resume.jsonc"))
+  }
+  
+  return candidates
+}
+
+export function discoverUserConfigPath(platform: Platform, cwd: string = process.cwd()): string | undefined {
+  const candidates = getPlatformConfigDirs(platform, cwd)
+  
+  for (const path of candidates) {
+    if (existsSync(path)) {
+      return path
+    }
+  }
+  
+  return undefined
+}
 
 function isRecord(value: unknown): value is RecordLike {
   return typeof value === "object" && value !== null
