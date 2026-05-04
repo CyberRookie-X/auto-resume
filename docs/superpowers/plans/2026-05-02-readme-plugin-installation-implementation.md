@@ -19,14 +19,16 @@
 
 - [ ] **Step 1: Write the failing README assertions**
 
-Update the runtime README assertions so they look for the new plugin-first install copy instead of the old fallback-first copy.
+Update the runtime README assertions so they look for the GitHub install copy instead of the old fallback-first copy.
 
 The runtime README assertions should check for these exact strings:
 
 ```ts
 assert.equal(runtimeReadme.includes("Use the native plugin flow first:"), true)
 assert.equal(
-  runtimeReadme.includes('OpenCode loads this checkout directly from `opencode.json` with `plugin: ["./"]`.'),
+  runtimeReadme.includes(
+    "OpenCode loads this plugin directly from GitHub, so you do not need a local build or runtime tarball for this path.",
+  ),
   true,
 )
 assert.equal(
@@ -60,7 +62,7 @@ Use the native plugin flow first:
 
 ### OpenCode
 
-- OpenCode loads this checkout directly from `opencode.json` with `plugin: ["./"]`.
+- OpenCode loads this plugin directly from GitHub, so you do not need a local build or runtime tarball for this path.
 
 ### Claude Code
 
@@ -130,7 +132,7 @@ test("Chinese README mirrors plugin-first install guidance", async () => {
 
   assert.match(readme, /## 安装/)
   assert.match(readme, /优先使用各客户端的原生插件安装方式/)
-  assert.match(readme, /OpenCode 会通过 `opencode\.json` 直接加载这个 checkout/)
+   assert.match(readme, /OpenCode 会直接从 GitHub 加载这个插件/)
   assert.match(readme, /## 配置参考/)
 })
 ```
@@ -156,7 +158,7 @@ Use the same structure as `README.md`, translated into Chinese:
 
 ### OpenCode
 
-- OpenCode 会通过 `opencode.json` 里的 `plugin: ["./"]` 直接加载这个 checkout。
+- OpenCode 会直接从 GitHub 加载这个插件，所以这条路径不需要本地构建，也不需要手动解包运行时 tarball。
 
 ### Claude Code
 

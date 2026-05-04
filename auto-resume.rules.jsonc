@@ -3,7 +3,7 @@
     {
       // OpenCode upstream read failures and similar transport errors.
       "id": "resume-on-stream-read-error",
-      "scope": "all",
+      "scope": "root",
       "match": {
         "messageRegex": "stream_read_error"
       },
@@ -21,7 +21,7 @@
     {
       // Safe turns that only produced reasoning and no tool side effects.
       "id": "resume-on-reasoning-only-stop",
-      "scope": "all",
+      "scope": "root",
       "match": {
         "reasoningOnlyStop": true
       },
@@ -39,7 +39,7 @@
     {
       // Stop when the host reports an interrupted tool execution that was still replay-safe.
       "id": "resume-on-tool-abort",
-      "scope": "all",
+      "scope": "root",
       "match": {
         "toolExecutionAborted": true
       },
@@ -57,7 +57,7 @@
     {
       // Replay turns that ended because the model hit a length limit.
       "id": "resume-on-length-finish",
-      "scope": "all",
+      "scope": "root",
       "match": {
         "finishLengthStop": true
       },

@@ -68,6 +68,13 @@ function getSessionID(properties) {
     }
     return readStringProperty(properties, "sessionID") ?? readStringProperty(properties, "sessionId") ?? readStringProperty(properties, "id");
 }
+function getSessionStatusType(properties) {
+    const status = readProperty(properties, "status");
+    if (!isRecord(status)) {
+        return undefined;
+    }
+    return readStringProperty(status, "type");
+}
 function getSessionRecord(response) {
     const data = unwrapData(response);
     return isRecord(data) ? data : {};
@@ -340,6 +347,9 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
     const dispatchRecovery = createRecoveryDispatcher(client, (sessionID) => deletedSessions.has(sessionID));
     const pendingTimers = new Map();
     const deletedSessions = new Set();
+    const abortedSessions = new Set();
+    const recentPositiveStatusAt = new Map();
+    const MESSAGE_ABORT_SIGNAL_WINDOW_MS = 2000;
     function releasePendingRecovery(sessionID, handle) {
         if (pendingTimers.get(sessionID)?.handle !== handle) {
             return;
@@ -354,6 +364,25 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
         timerAPI.clearTimeout(pending.handle);
         engine.clearPendingRecovery({ sessionID, ruleID: pending.ruleID });
         releasePendingRecovery(sessionID, pending.handle);
+    }
+    function clearTerminalStop(sessionID) {
+        abortedSessions.delete(sessionID);
+    }
+    function markPositiveStatus(sessionID) {
+        recentPositiveStatusAt.set(sessionID, Date.now());
+        clearTerminalStop(sessionID);
+        cancelPendingRecovery(sessionID);
+    }
+    function markTerminalStop(sessionID) {
+        abortedSessions.add(sessionID);
+        cancelPendingRecovery(sessionID);
+    }
+    function isTerminalStopped(sessionID) {
+        return abortedSessions.has(sessionID);
+    }
+    function hasRecentPositiveStatus(sessionID) {
+        const seenAt = recentPositiveStatusAt.get(sessionID);
+        return seenAt !== undefined && Date.now() - seenAt <= MESSAGE_ABORT_SIGNAL_WINDOW_MS;
     }
     function scheduleRecovery(decision, body) {
         cancelPendingRecovery(decision.sessionID);
@@ -374,11 +403,23 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
     return {
         async handleEvent(event) {
             try {
+                if (event.type === "session.status") {
+                    const sessionID = getSessionID(event.properties);
+                    if (!sessionID || deletedSessions.has(sessionID)) {
+                        return;
+                    }
+                    const statusType = getSessionStatusType(event.properties);
+                    if (statusType === "busy" || statusType === "retry") {
+                        markPositiveStatus(sessionID);
+                    }
+                    return;
+                }
                 if (event.type === "session.deleted") {
                     const sessionID = getSessionID(event.properties);
                     if (sessionID) {
                         deletedSessions.add(sessionID);
-                        cancelPendingRecovery(sessionID);
+                        recentPositiveStatusAt.delete(sessionID);
+                        markTerminalStop(sessionID);
                         engine.clearSession(sessionID);
                     }
                     return;
@@ -399,6 +440,16 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
                     const errorName = readStringProperty(errorRecord, "name") ?? readStringProperty(errorRecord, "errorName") ?? "Error";
                     const errorData = readProperty(errorRecord, "data");
                     const errorMessage = readStringProperty(errorData, "message") ?? readStringProperty(errorRecord, "message") ?? String(error ?? "");
+                    if (errorName === "MessageAbortedError") {
+                        cancelPendingRecovery(sessionID);
+                        if (hasRecentPositiveStatus(sessionID)) {
+                            clearTerminalStop(sessionID);
+                            return;
+                        }
+                        markTerminalStop(sessionID);
+                        engine.clearSession(sessionID);
+                        return;
+                    }
                     const decision = engine.onError({
                         sessionID,
                         scope,
@@ -430,6 +481,9 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
                 if (event.type === "session.idle") {
                     const sessionID = getSessionID(event.properties);
                     if (!sessionID || deletedSessions.has(sessionID)) {
+                        return;
+                    }
+                    if (isTerminalStopped(sessionID)) {
                         return;
                     }
                     const [session, messages] = await Promise.all([readSessionContext(sessionID, client), readMessages(sessionID, client)]);

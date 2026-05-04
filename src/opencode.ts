@@ -131,6 +131,15 @@ function getSessionID(properties: Record<string, unknown> | undefined): string |
   return readStringProperty(properties, "sessionID") ?? readStringProperty(properties, "sessionId") ?? readStringProperty(properties, "id")
 }
 
+function getSessionStatusType(properties: Record<string, unknown> | undefined): string | undefined {
+  const status = readProperty(properties, "status")
+  if (!isRecord(status)) {
+    return undefined
+  }
+
+  return readStringProperty(status, "type")
+}
+
 function getSessionRecord(response: unknown): Record<string, unknown> {
   const data = unwrapData<unknown>(response)
   return isRecord(data) ? data : {}
@@ -472,6 +481,9 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
   const dispatchRecovery = createRecoveryDispatcher(client, (sessionID) => deletedSessions.has(sessionID))
   const pendingTimers = new Map<string, { handle: TimerHandle; ruleID: string }>()
   const deletedSessions = new Set<string>()
+  const abortedSessions = new Set<string>()
+  const recentPositiveStatusAt = new Map<string, number>()
+  const MESSAGE_ABORT_SIGNAL_WINDOW_MS = 2000
 
   function releasePendingRecovery(sessionID: string, handle: TimerHandle): void {
     if (pendingTimers.get(sessionID)?.handle !== handle) {
@@ -490,6 +502,30 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
     timerAPI.clearTimeout(pending.handle)
     engine.clearPendingRecovery({ sessionID, ruleID: pending.ruleID })
     releasePendingRecovery(sessionID, pending.handle)
+  }
+
+  function clearTerminalStop(sessionID: string): void {
+    abortedSessions.delete(sessionID)
+  }
+
+  function markPositiveStatus(sessionID: string): void {
+    recentPositiveStatusAt.set(sessionID, Date.now())
+    clearTerminalStop(sessionID)
+    cancelPendingRecovery(sessionID)
+  }
+
+  function markTerminalStop(sessionID: string): void {
+    abortedSessions.add(sessionID)
+    cancelPendingRecovery(sessionID)
+  }
+
+  function isTerminalStopped(sessionID: string): boolean {
+    return abortedSessions.has(sessionID)
+  }
+
+  function hasRecentPositiveStatus(sessionID: string): boolean {
+    const seenAt = recentPositiveStatusAt.get(sessionID)
+    return seenAt !== undefined && Date.now() - seenAt <= MESSAGE_ABORT_SIGNAL_WINDOW_MS
   }
 
   function scheduleRecovery(decision: RecoveryScheduleDecision, body?: OpenCodePromptBody): void {
@@ -512,11 +548,26 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
   return {
     async handleEvent(event: OpenCodeEvent): Promise<void> {
       try {
+        if (event.type === "session.status") {
+          const sessionID = getSessionID(event.properties)
+          if (!sessionID || deletedSessions.has(sessionID)) {
+            return
+          }
+
+          const statusType = getSessionStatusType(event.properties)
+          if (statusType === "busy" || statusType === "retry") {
+            markPositiveStatus(sessionID)
+          }
+
+          return
+        }
+
         if (event.type === "session.deleted") {
           const sessionID = getSessionID(event.properties)
           if (sessionID) {
             deletedSessions.add(sessionID)
-            cancelPendingRecovery(sessionID)
+            recentPositiveStatusAt.delete(sessionID)
+            markTerminalStop(sessionID)
             engine.clearSession(sessionID)
           }
           return
@@ -542,6 +593,19 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
           const errorData = readProperty(errorRecord, "data")
           const errorMessage =
             readStringProperty(errorData, "message") ?? readStringProperty(errorRecord, "message") ?? String(error ?? "")
+
+          if (errorName === "MessageAbortedError") {
+            cancelPendingRecovery(sessionID)
+
+            if (hasRecentPositiveStatus(sessionID)) {
+              clearTerminalStop(sessionID)
+              return
+            }
+
+            markTerminalStop(sessionID)
+            engine.clearSession(sessionID)
+            return
+          }
 
           const decision = engine.onError({
             sessionID,
@@ -580,6 +644,10 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
         if (event.type === "session.idle") {
           const sessionID = getSessionID(event.properties)
           if (!sessionID || deletedSessions.has(sessionID)) {
+            return
+          }
+
+          if (isTerminalStopped(sessionID)) {
             return
           }
 

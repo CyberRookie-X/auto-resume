@@ -15,7 +15,7 @@ Make `auto-resume` installable through each host's native plugin mechanism inste
 
 Use one repository with three host-specific surfaces:
 
-1. OpenCode reads the repository through `opencode.json` and loads the package entrypoint directly.
+1. OpenCode loads the package directly from GitHub using the repo's published entrypoint.
 2. Claude Code reads a repo marketplace plus a Claude plugin manifest.
 3. Codex reads the same repo plugin package and marketplace metadata, then installs/enables it through its own plugin flow.
 
@@ -33,7 +33,7 @@ The shared runtime stays where it is: `src/core.ts`, `src/replay.ts`, `src/types
 
 The install surface changes are mostly metadata and thin entrypoints:
 
-- OpenCode: `src/opencode.ts` becomes the package entrypoint OpenCode loads. It keeps the existing adapter helpers, but also exports a default plugin module with a `server()` hook so OpenCode can load it from a git/npm spec in `opencode.json`. `package.json` should point `main` at `dist/opencode.js` so the loaded package resolves correctly after build.
+- OpenCode: `src/opencode.ts` remains the OpenCode adapter entrypoint. The GitHub install path should resolve the package entrypoint directly from the repository, so `package.json` must keep the runtime entrypoint aligned with the checked-in source.
 - Claude Code: add `.claude-plugin/plugin.json` and a Claude marketplace file at `.claude-plugin/marketplace.json`. The Claude hook config should live in `hooks/hooks.json` so the plugin can be installed from a marketplace rather than copied by hand. `.claude/settings.json` only handles project-level marketplace registration and plugin enablement; it does not carry the hook implementation.
 - Codex: keep `.codex-plugin/plugin.json` as the Codex manifest and reuse the same `hooks/hooks.json`. Codex can read the Claude-style marketplace file, so the repo does not need a separate custom installer.
 
@@ -44,7 +44,7 @@ The install surface changes are mostly metadata and thin entrypoints:
 Files that will change:
 
 - `package.json`: add package entrypoint metadata for OpenCode resolution.
-- `opencode.json`: point at the repository's native OpenCode plugin source instead of a custom bootstrap path.
+- OpenCode install docs: point at the repository's native GitHub plugin source instead of a custom bootstrap path.
 - `src/opencode.ts`: add the OpenCode plugin-module default export while preserving the existing recovery adapter exports.
 - `.claude-plugin/plugin.json`: new Claude plugin manifest.
 - `.claude-plugin/marketplace.json`: new shared marketplace metadata for Claude Code and Codex.
@@ -61,9 +61,9 @@ Files that will change:
 
 ### OpenCode
 
-OpenCode should be installable from `opencode.json` without running a shell script. The config will reference the repository as a plugin source, and the package entrypoint will export a default plugin module that OpenCode can load.
+OpenCode should be installable from GitHub without running a shell script. The config will reference the repository as the plugin source, and the package entrypoint will resolve from the checked-in source.
 
-Example shape: `opencode.json` points its `plugin` entry at the repository's git URL.
+Example shape: the OpenCode config points its `plugin` entry at the repository's GitHub URL.
 
 ### Claude Code
 
@@ -81,7 +81,7 @@ Codex does not get a custom bootstrap script. The repo marketplace is the instal
 
 `README.md` and `README.zh.md` should present the native plugin install paths first, in this order:
 
-1. OpenCode `opencode.json`
+1. OpenCode GitHub plugin config
 2. Claude Code plugin/marketplace settings
 3. Codex marketplace/plugin flow
 4. `install.sh` as an offline/manual fallback only
@@ -104,7 +104,7 @@ Both READMEs should make it explicit that `install.sh` is no longer the primary 
 ## Acceptance Criteria
 
 - Users can install or enable the plugin without running `install.sh` first.
-- OpenCode uses `opencode.json` as the primary install path.
+- OpenCode can install through the GitHub plugin path without a shell script.
 - Claude Code can install the plugin through the repo marketplace and project settings.
 - Codex can discover and install the plugin through native marketplace/plugin flow.
 - `README.md` and `README.zh.md` both show the native install path first and the shell script only as fallback.

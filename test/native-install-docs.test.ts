@@ -25,19 +25,23 @@ test("host INSTALL docs expose raw fetch instructions and copyable configs", asy
   const opencode = await readFile(join(repoRoot, ".opencode", "INSTALL.md"), "utf8")
   const claude = await readFile(join(repoRoot, ".claude", "INSTALL.md"), "utf8")
   const codex = await readFile(join(repoRoot, ".codex-plugin", "INSTALL.md"), "utf8")
-  const opencodeJson = await readFile(join(repoRoot, "opencode.json"), "utf8")
+  const pkg = JSON.parse(await readFile(join(repoRoot, "package.json"), "utf8"))
   const claudePlugin = await readFile(join(repoRoot, ".claude-plugin", "plugin.json"), "utf8")
   const claudeMarketplace = await readFile(join(repoRoot, ".claude-plugin", "marketplace.json"), "utf8")
   const claudeSettings = await readFile(join(repoRoot, ".claude", "settings.json"), "utf8")
   const codexPlugin = await readFile(join(repoRoot, ".codex-plugin", "plugin.json"), "utf8")
   const hooksJson = await readFile(join(repoRoot, "hooks", "hooks.json"), "utf8")
+  const expectedOpenCode = {
+    "$schema": "https://opencode.ai/config.json",
+    plugin: [`github:CyberRookie-X/auto-resume#v${pkg.version}`],
+  }
 
   assert.match(
     opencode,
     /Fetch and follow instructions from https:\/\/raw\.githubusercontent\.com\/CyberRookie-X\/auto-resume\/refs\/heads\/main\/\.opencode\/INSTALL\.md/,
   )
   assert.equal(extractFencedBlocks(opencode)[0], "Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md")
-  assertJsonBlock(opencode, 1, JSON.parse(opencodeJson))
+  assertJsonBlock(opencode, 1, expectedOpenCode)
 
   assert.match(
     claude,

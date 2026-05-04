@@ -42,8 +42,13 @@ function assertOrdered(readme: string, headings: string[], filePath: string): vo
 }
 
 async function loadExpectedJson() {
+  const pkg = JSON.parse(await readFile(join(repoRoot, "package.json"), "utf8"))
+
   return {
-    opencode: JSON.parse(await readFile(join(repoRoot, "opencode.json"), "utf8")),
+    opencode: {
+      "$schema": "https://opencode.ai/config.json",
+      plugin: [`github:CyberRookie-X/auto-resume#v${pkg.version}`],
+    },
     claudePlugin: JSON.parse(await readFile(join(repoRoot, ".claude-plugin", "plugin.json"), "utf8")),
     claudeMarketplace: JSON.parse(await readFile(join(repoRoot, ".claude-plugin", "marketplace.json"), "utf8")),
     claudeSettings: JSON.parse(await readFile(join(repoRoot, ".claude", "settings.json"), "utf8")),

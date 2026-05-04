@@ -4,7 +4,7 @@
 
 **Goal:** Make `auto-resume` installable through OpenCode, Claude Code, and Codex native plugin flows without making `install.sh` the primary path.
 
-**Architecture:** Keep the shared recovery logic in TypeScript and add thin host-facing entrypoints plus plugin metadata. OpenCode loads the repo directly from `opencode.json`; Claude Code and Codex discover the same repo through marketplace/plugin manifests; the runtime tarball remains the offline fallback and now includes the new plugin assets.
+**Architecture:** Keep the shared recovery logic in TypeScript and add thin host-facing entrypoints plus plugin metadata. OpenCode installs from GitHub using the repo's published package entrypoint; Claude Code and Codex discover the same repo through marketplace/plugin manifests; the runtime tarball remains the offline fallback and now includes the new plugin assets.
 
 **Tech Stack:** TypeScript, Node.js test runner, JSON config files, OpenCode plugin loader, Claude Code plugin/marketplace files, Codex plugin/marketplace files, bash release/install scripts.
 
@@ -146,12 +146,11 @@ git add src/auto-resume-hook.ts hooks/auto-resume-hook.js test/auto-resume-hook.
 git commit -m "feat: add unified auto-resume hook launcher"
 ```
 
-### Task 2: Make OpenCode load the repo directly
+### Task 2: Make OpenCode install through GitHub
 
 **Files:**
 - Modify: `src/opencode.ts`
 - Modify: `package.json`
-- Modify: `opencode.json`
 - Test: `test/opencode-plugin.test.ts`
 
 - [ ] **Step 1: Write the failing OpenCode plugin test**
@@ -167,13 +166,16 @@ import autoResumePlugin, { createOpenCodeAdapter } from "../src/opencode.js"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 
-test("opencode config points at the repo root", async () => {
-  const config = JSON.parse(await readFile(join(repoRoot, "opencode.json"), "utf8"))
+test("OpenCode plugin config points at the GitHub repo", async () => {
   const pkg = JSON.parse(await readFile(join(repoRoot, "package.json"), "utf8"))
+  const config = {
+    "$schema": "https://opencode.ai/config.json",
+    plugin: [`github:CyberRookie-X/auto-resume#v${pkg.version}`],
+  }
 
-  assert.deepEqual(config.plugin, ["./"])
-  assert.equal(pkg.main, "dist/opencode.js")
-  assert.equal(pkg.prepare, "npm run build")
+  assert.deepEqual(config.plugin, [`github:CyberRookie-X/auto-resume#v${pkg.version}`])
+  assert.equal(pkg.main, "src/opencode.ts")
+  assert.equal(pkg.prepare, undefined)
 })
 
 test("default export returns an event hook", async () => {
@@ -248,7 +250,7 @@ Run: `npm test -- test/opencode-plugin.test.ts`
 Expected: PASS.
 
 ```bash
-git add src/opencode.ts package.json opencode.json test/opencode-plugin.test.ts
+git add src/opencode.ts package.json test/opencode-plugin.test.ts
 git commit -m "feat: make OpenCode load auto-resume directly from source"
 ```
 
@@ -486,12 +488,12 @@ Replace the Install section in `README.md` with a native-first flow:
 
 ### OpenCode
 
-Use the repo directly from `opencode.json`:
+Use the GitHub repo install path:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["./"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.28"]
 }
 ```
 

@@ -38,7 +38,7 @@ This keeps the README usable for new users while still documenting the full plug
 
 The install section should present the primary paths in this order:
 
-1. OpenCode: load the repository directly from `opencode.json` with `plugin: ["./"]`.
+1. OpenCode: load the plugin directly from GitHub so users do not need a local build or runtime tarball.
 2. Claude Code: use `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, and `.claude/settings.json`.
 3. Codex: use `.codex-plugin/plugin.json` with the shared marketplace metadata and hook definitions.
 4. `install.sh`: offline fallback for unpacking a runtime tarball manually.

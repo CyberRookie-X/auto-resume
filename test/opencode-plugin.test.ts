@@ -8,7 +8,7 @@ import autoResumePlugin, { createOpenCodeAdapter } from "../src/opencode.js"
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url))
 
-test("OpenCode config points at the GitHub release", async () => {
+test("development OpenCode config points at the GitHub repo", async () => {
   const config = JSON.parse(await readFile(join(repoRoot, "opencode.json"), "utf8"))
   const pkg = JSON.parse(await readFile(join(repoRoot, "package.json"), "utf8"))
 

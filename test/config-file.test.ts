@@ -120,11 +120,11 @@ test("default config matches the checked-in jsonc files", () => {
     sources: ["https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/auto-resume.rules.jsonc"],
   })
 
-  assert.deepEqual(config.rules.map((rule) => rule.id), [
-    "resume-on-stream-read-error",
-    "resume-on-reasoning-only-stop",
-    "resume-on-tool-abort",
-    "resume-on-length-finish",
+  assert.deepEqual(config.rules.map((rule) => ({ id: rule.id, scope: rule.scope })), [
+    { id: "resume-on-stream-read-error", scope: "root" },
+    { id: "resume-on-reasoning-only-stop", scope: "root" },
+    { id: "resume-on-tool-abort", scope: "root" },
+    { id: "resume-on-length-finish", scope: "root" },
   ])
 })
 

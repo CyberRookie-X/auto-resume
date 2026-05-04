@@ -49,7 +49,7 @@ Files to update or create:
 
 - `README.md`: add raw `INSTALL.md` instructions and copyable host config blocks.
 - `README.zh.md`: mirror the English README structure and examples in Chinese.
-- `.opencode/INSTALL.md`: add OpenCode-specific install instructions and the exact `opencode.json` block.
+- `.opencode/INSTALL.md`: add OpenCode-specific install instructions and the exact GitHub plugin config block.
 - `.claude/INSTALL.md`: add Claude Code-specific install instructions and the exact plugin / marketplace / settings blocks.
 - `.codex-plugin/INSTALL.md`: add Codex-specific install instructions and the exact plugin / hook blocks.
 - `test/readme-installation.test.ts`: add or update coverage for the new install guidance and configuration blocks.
@@ -64,12 +64,12 @@ The README should tell OpenCode to fetch and follow:
 https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md
 ```
 
-The OpenCode manual configuration block should show the exact repo-local config:
+The OpenCode manual configuration block should show the exact GitHub plugin config:
 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["./"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.28"]
 }
 ```
 

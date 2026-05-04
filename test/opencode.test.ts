@@ -967,6 +967,181 @@ test("session.error replay preserves the latest user message agent and model", a
   })
 })
 
+test("session.error with MessageAbortedError does not auto-resume by default", async () => {
+  const prompts: PromptCall[] = []
+  const { timers, flush } = createTimers()
+  const adapter = createOpenCodeAdapter({
+    client: createClient({
+      session: { id: "ses_abort" },
+      messages: [
+        {
+          info: { role: "assistant", id: "msg_abort" },
+          parts: [{ type: "text", text: "" }],
+        },
+      ],
+      prompts,
+    }) as any,
+    config: {
+      rules: [
+        {
+          id: "resume-on-abort",
+          scope: "all",
+          match: { messageRegex: "The operation was aborted" },
+          action: { type: "prompt", text: "RESUME" },
+          retry: { baseMs: 0, factor: 2, maxMs: 0, maxAttempts: 1 },
+        },
+      ],
+    },
+    timers: timers as any,
+  })
+
+  let settled = false
+  const handleEventPromise = trackSettlement(
+    adapter.handleEvent({
+      type: "session.error",
+      properties: {
+        sessionID: "ses_abort",
+        error: { name: "MessageAbortedError", data: { message: "The operation was aborted." } },
+      },
+    }),
+    () => {
+      settled = true
+    },
+  )
+
+  await waitForMacrotask()
+
+  assert.equal(settled, true)
+  assert.equal(prompts.length, 0)
+
+  await flush()
+  await handleEventPromise
+
+  assert.equal(prompts.length, 0)
+})
+
+test("session.error with MessageAbortedError does not block later retryable errors", async () => {
+  const prompts: PromptCall[] = []
+  const { timers, delays, flush } = createTimers()
+  const adapter = createOpenCodeAdapter({
+    client: createClient({
+      session: { id: "ses_abort_then_retry" },
+      prompts,
+    }) as any,
+    config: {
+      rules: [
+        {
+          id: "resume-on-stream-read-error",
+          scope: "all",
+          match: { messageRegex: "stream_read_error" },
+          action: { type: "prompt", text: "RESUME" },
+          retry: { baseMs: 10, factor: 2, maxMs: 20, maxAttempts: 3 },
+        },
+      ],
+    },
+    timers: timers as any,
+  })
+
+  await adapter.handleEvent({
+    type: "session.error",
+    properties: {
+      sessionID: "ses_abort_then_retry",
+      error: { name: "MessageAbortedError", data: { message: "The operation was aborted." } },
+    },
+  })
+
+  await adapter.handleEvent({
+    type: "session.error",
+    properties: {
+      sessionID: "ses_abort_then_retry",
+      error: { name: "UnknownError", data: { message: "stream_read_error" } },
+    },
+  })
+
+  await waitForMacrotask()
+
+  assert.deepEqual(delays, [10])
+
+  await flush()
+
+  assert.equal(prompts.length, 1)
+  assert.equal(prompts[0].body.parts[0].text, "RESUME")
+})
+
+test("session.status retry clears a previous MessageAbortedError lock", async () => {
+  const prompts: PromptCall[] = []
+  const { timers, flush } = createTimers()
+  const adapter = createOpenCodeAdapter({
+    client: createClient({
+      session: { id: "ses_abort_unlock" },
+      messages: [
+        {
+          info: { role: "user", id: "msg_u1" },
+          parts: [{ type: "text", text: "search the docs and summarize" }],
+        },
+        {
+          info: { role: "assistant", id: "msg_a1" },
+          parts: [{ type: "tool", tool: "read", state: { status: "completed" } }],
+        },
+      ],
+      prompts,
+    }) as any,
+    config: {
+      rules: [
+        {
+          id: "resume-on-stream-read-error",
+          scope: "all",
+          match: { messageRegex: "stream_read_error" },
+          action: { type: "prompt", text: "RESUME" },
+          retry: { baseMs: 10, factor: 2, maxMs: 20, maxAttempts: 3 },
+        },
+      ],
+    },
+    timers: timers as any,
+  })
+
+  await adapter.handleEvent({
+    type: "session.error",
+    properties: {
+      sessionID: "ses_abort_unlock",
+      error: { name: "MessageAbortedError", data: { message: "The operation was aborted." } },
+    },
+  })
+
+  await adapter.handleEvent({
+    type: "session.status",
+    properties: {
+      sessionID: "ses_abort_unlock",
+      status: { type: "retry", attempt: 1, message: "retrying", next: Date.now() + 1000 },
+    },
+  })
+
+  let settled = false
+  const handleEventPromise = trackSettlement(
+    adapter.handleEvent({
+      type: "session.error",
+      properties: {
+        sessionID: "ses_abort_unlock",
+        error: { name: "UnknownError", data: { message: "stream_read_error" } },
+      },
+    }),
+    () => {
+      settled = true
+    },
+  )
+
+  await waitForMacrotask()
+
+  assert.equal(settled, true)
+  assert.equal(prompts.length, 0)
+
+  await flush()
+  await handleEventPromise
+
+  assert.equal(prompts.length, 1)
+  assert.equal(prompts[0].body.parts[0].text, "search the docs and summarize")
+})
+
 test("prompt failure clears pending recovery so a later event can retry", async () => {
   const prompts: PromptCall[] = []
   const { timers, flush } = createTimers()
