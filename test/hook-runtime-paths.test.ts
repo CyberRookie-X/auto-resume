@@ -42,7 +42,7 @@ function runHookCommand(
 
 function runBuild(): Promise<{ stdout: string; stderr: string; code: number }> {
   return new Promise((resolve, reject) => {
-    const child = spawn("npm", ["run", "build"], {
+    const child = spawn("npx", ["tsc", "-p", "tsconfig.json"], {
       cwd: repoRoot,
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"],

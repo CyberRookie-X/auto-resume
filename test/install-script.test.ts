@@ -114,7 +114,7 @@ test("install script lays out a local runtime tree", async () => {
   const curlPath = join(curlDir, "curl")
 
   try {
-    runChecked("npm", ["run", "build"], repoRoot)
+    runChecked("npx", ["tsc", "-p", "tsconfig.json"], repoRoot)
     runChecked("node", ["scripts/package-runtime.mjs", "--out", tarballPath], repoRoot)
 
     await writeFile(
@@ -208,7 +208,7 @@ test("install script downloads the latest release tarball when tarball is omitte
   const curlPath = join(curlDir, "curl")
 
   try {
-    runChecked("npm", ["run", "build"], repoRoot)
+    runChecked("npx", ["tsc", "-p", "tsconfig.json"], repoRoot)
     runChecked("node", ["scripts/package-runtime.mjs", "--out", tarballPath], repoRoot)
 
     await writeFile(
@@ -295,7 +295,7 @@ test("install script resolves repo slug from GITHUB_REPOSITORY when tarball is o
   const curlPath = join(curlDir, "curl")
 
   try {
-    runChecked("npm", ["run", "build"], repoRoot)
+    runChecked("npx", ["tsc", "-p", "tsconfig.json"], repoRoot)
     runChecked("node", ["scripts/package-runtime.mjs", "--out", tarballPath], repoRoot)
 
     await writeFile(
