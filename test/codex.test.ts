@@ -56,6 +56,44 @@ test("replay-safe latest turns reuse the original user prompt", async () => {
   })
 })
 
+test("latest user with multiple read-only assistant messages replays the original prompt", async () => {
+  const output = await recoverCodexSession(
+    {
+      sessionID: "ses_multi_assistant",
+      transcriptPath: "/tmp/ses_multi_assistant.jsonl",
+      cwd: "/tmp/project",
+    },
+    {
+      readFile: async () =>
+        transcript([
+          {
+            type: "user",
+            message: { role: "user", content: "complete the task" },
+          },
+          {
+            type: "assistant",
+            message: {
+              role: "assistant",
+              content: [{ type: "tool_use", name: "Read", input: { file_path: "README.md" } }],
+            },
+          },
+          {
+            type: "assistant",
+            message: {
+              role: "assistant",
+              content: [{ type: "tool_use", name: "WebSearch", input: { query: "docs" } }],
+            },
+          },
+        ]),
+    },
+  )
+
+  assert.deepEqual(output, {
+    decision: "block",
+    reason: "complete the task",
+  })
+})
+
 test("unsafe latest turns fall back to RESUME", async () => {
   const output = await recoverCodexSession(
     {

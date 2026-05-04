@@ -274,10 +274,8 @@ function buildCurrentTurn(messages: readonly RecordLike[]): CurrentTurn | null {
 
     const turn = messages.slice(index)
     const userMessage = turn[0]
-    const assistantParts: RecordLike[] = []
+    let latestAssistantMessage: RecordLike | undefined
     let hasAssistantToolParts = false
-    let assistantAgent: unknown
-    let assistantModel: unknown
 
     for (let turnIndex = 1; turnIndex < turn.length; turnIndex += 1) {
       const turnMessage = turn[turnIndex]
@@ -285,17 +283,15 @@ function buildCurrentTurn(messages: readonly RecordLike[]): CurrentTurn | null {
         continue
       }
 
+      latestAssistantMessage = turnMessage
       for (const part of getMessageParts(turnMessage) as RecordLike[]) {
-        assistantParts.push(part)
         if (readStringProperty(part, "type") === "tool") {
           hasAssistantToolParts = true
         }
       }
-      assistantAgent = readProperty(turnMessage, "agent") ?? assistantAgent
-      assistantModel = readProperty(turnMessage, "model") ?? assistantModel
     }
 
-    if (assistantParts.length === 0) {
+    if (!latestAssistantMessage) {
       return {
         messages: [userMessage],
         hasAssistantToolParts: false,
@@ -303,15 +299,7 @@ function buildCurrentTurn(messages: readonly RecordLike[]): CurrentTurn | null {
     }
 
     return {
-      messages: [
-        userMessage,
-        {
-          role: "assistant",
-          parts: assistantParts,
-          agent: assistantAgent,
-          model: assistantModel,
-        },
-      ],
+      messages: [userMessage, latestAssistantMessage],
       hasAssistantToolParts,
     }
   }

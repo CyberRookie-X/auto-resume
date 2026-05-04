@@ -254,9 +254,7 @@ function buildCurrentTurn(messages: readonly ClaudeMessage[]): readonly ClaudeMe
 
     const turn = messages.slice(index)
     const userMessage = turn[0]
-    const assistantParts: RecordLike[] = []
-    let assistantAgent: unknown
-    let assistantModel: unknown
+    let latestAssistantMessage: ClaudeMessage | undefined
 
     for (let turnIndex = 1; turnIndex < turn.length; turnIndex += 1) {
       const turnMessage = turn[turnIndex]
@@ -264,24 +262,14 @@ function buildCurrentTurn(messages: readonly ClaudeMessage[]): readonly ClaudeMe
         continue
       }
 
-      assistantParts.push(...turnMessage.parts)
-      assistantAgent = turnMessage.agent ?? assistantAgent
-      assistantModel = turnMessage.model ?? assistantModel
+      latestAssistantMessage = turnMessage
     }
 
-    if (assistantParts.length === 0) {
+    if (!latestAssistantMessage) {
       return [userMessage]
     }
 
-    return [
-      userMessage,
-      {
-        role: "assistant",
-        parts: assistantParts,
-        agent: assistantAgent,
-        model: assistantModel,
-      },
-    ]
+    return [userMessage, latestAssistantMessage]
   }
 
   return null
