@@ -69,7 +69,7 @@ The OpenCode manual configuration block should show the exact GitHub plugin conf
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.28"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.29"]
 }
 ```
 

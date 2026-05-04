@@ -493,7 +493,7 @@ Use the GitHub repo install path:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.28"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.29"]
 }
 ```
 
