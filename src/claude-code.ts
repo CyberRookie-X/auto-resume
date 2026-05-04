@@ -336,7 +336,7 @@ export function parseClaudeHookInput(rawInput: string): ClaudeHookInput | null {
 }
 
 export function planClaudeRecovery(input: ClaudeHookInput, transcriptText?: string | null): ClaudeRecoveryPlan {
-  const safeToolNames = loadAutoResumeRuntimeConfigFile().safeToolNames
+  const safeToolNames = loadAutoResumeRuntimeConfigFile(undefined, { platform: "claude", cwd: input.cwd }).safeToolNames
 
   if (!transcriptText) {
     return buildFallbackPlan(input)
