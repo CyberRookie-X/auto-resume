@@ -237,7 +237,7 @@ export function parseClaudeHookInput(rawInput) {
     return input;
 }
 export function planClaudeRecovery(input, transcriptText) {
-    const safeToolNames = loadAutoResumeRuntimeConfigFile().safeToolNames;
+    const safeToolNames = loadAutoResumeRuntimeConfigFile(undefined, { platform: "claude", cwd: input.cwd }).safeToolNames;
     if (!transcriptText) {
         return buildFallbackPlan(input);
     }

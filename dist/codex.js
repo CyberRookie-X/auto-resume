@@ -247,7 +247,7 @@ function readTranscriptText(input, readFile) {
     return readFile(input.transcriptPath, "utf8").catch(() => undefined);
 }
 function buildCodexStopOutput(input, transcriptText) {
-    const safeToolNames = loadAutoResumeRuntimeConfigFile().safeToolNames;
+    const safeToolNames = loadAutoResumeRuntimeConfigFile(undefined, { platform: "codex", cwd: input?.cwd }).safeToolNames;
     if (!transcriptText) {
         return buildFallbackOutput();
     }
