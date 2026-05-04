@@ -51,6 +51,21 @@ async function assertExists(path, description) {
 async function main() {
   const outArg = parseOutPath(process.argv.slice(2))
   const outPath = isAbsolute(outArg) ? outArg : resolve(repoRoot, outArg)
+  
+  // Compile TypeScript before packaging
+  const compileResult = spawnSync("npx", ["tsc", "-p", "tsconfig.json"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  })
+  
+  if (compileResult.error) {
+    throw compileResult.error
+  }
+  
+  if (compileResult.status !== 0) {
+    throw new Error(compileResult.stderr || "Failed to compile TypeScript")
+  }
+  
   const distDir = join(repoRoot, "dist")
   const hooksDir = join(repoRoot, "hooks")
   const claudePluginDir = join(repoRoot, ".claude-plugin")
