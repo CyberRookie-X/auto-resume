@@ -1,11 +1,12 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { mkdtemp, writeFile } from "node:fs/promises"
-import { tmpdir } from "node:os"
+import { existsSync, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { tmpdir, homedir } from "node:os"
 import { join } from "node:path"
 
 import { createDefaultConfig } from "../src/index.js"
 import {
+  discoverUserConfigPath,
   loadAutoResumeConfigFile,
   loadAutoResumeRulesFile,
   loadAutoResumeRuntimeConfigFile,
@@ -185,4 +186,218 @@ test("loads cached rules when sync is enabled", async () => {
   const config = loadAutoResumeConfigFile(runtimePath, { cachePath, rulesPath: fallbackRulesPath })
 
   assert.equal(config.rules[0].id, "cached-rule")
+})
+
+test("discoverUserConfigPath returns undefined when no config exists", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-discover-"))
+  
+  const result = discoverUserConfigPath("opencode", tempDir)
+  
+  assert.equal(result, undefined)
+  
+  await rm(tempDir, { recursive: true, force: true })
+})
+
+test("discoverUserConfigPath finds project-level opencode config", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-opencode-"))
+  const configDir = join(tempDir, ".opencode")
+  await mkdir(configDir, { recursive: true })
+  const configPath = join(configDir, "auto-resume.jsonc")
+  await writeFile(configPath, `{ "safeToolNames": ["read"] }`, "utf8")
+  
+  const result = discoverUserConfigPath("opencode", tempDir)
+  
+  assert.equal(result, configPath)
+  
+  await rm(tempDir, { recursive: true, force: true })
+})
+
+test("discoverUserConfigPath finds project-level claude config", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-claude-"))
+  const configDir = join(tempDir, ".claude")
+  await mkdir(configDir, { recursive: true })
+  const configPath = join(configDir, "auto-resume.jsonc")
+  await writeFile(configPath, `{ "safeToolNames": ["read"] }`, "utf8")
+  
+  const result = discoverUserConfigPath("claude", tempDir)
+  
+  assert.equal(result, configPath)
+  
+  await rm(tempDir, { recursive: true, force: true })
+})
+
+test("discoverUserConfigPath finds project-level codex config", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-codex-"))
+  const configDir = join(tempDir, ".codex")
+  await mkdir(configDir, { recursive: true })
+  const configPath = join(configDir, "auto-resume.jsonc")
+  await writeFile(configPath, `{ "safeToolNames": ["read"] }`, "utf8")
+  
+  const result = discoverUserConfigPath("codex", tempDir)
+  
+  assert.equal(result, configPath)
+  
+  await rm(tempDir, { recursive: true, force: true })
+})
+
+test("discoverUserConfigPath prefers project-level over global for opencode", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-priority-"))
+  const projectConfigDir = join(tempDir, ".opencode")
+  await mkdir(projectConfigDir, { recursive: true })
+  const projectConfigPath = join(projectConfigDir, "auto-resume.jsonc")
+  await writeFile(projectConfigPath, `{ "safeToolNames": ["read"] }`, "utf8")
+  
+  const result = discoverUserConfigPath("opencode", tempDir)
+  
+  assert.equal(result, projectConfigPath)
+  
+  await rm(tempDir, { recursive: true, force: true })
+})
+
+test("discoverUserConfigPath finds global opencode config", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-global-open-"))
+  const globalConfigDir = join(tempDir, ".config", "opencode")
+  await mkdir(globalConfigDir, { recursive: true })
+  const globalConfigPath = join(globalConfigDir, "auto-resume.jsonc")
+  await writeFile(globalConfigPath, `{ "safeToolNames": ["read"] }`, "utf8")
+  
+  const originalHome = process.env.HOME
+  process.env.HOME = tempDir
+  
+  try {
+    const result = discoverUserConfigPath("opencode", tempDir)
+    assert.equal(result, globalConfigPath)
+  } finally {
+    process.env.HOME = originalHome
+  }
+  
+  await rm(tempDir, { recursive: true, force: true })
+})
+
+test("discoverUserConfigPath finds global claude config in ~/.claude", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-global-claude-"))
+  const globalConfigDir = join(tempDir, ".claude")
+  await mkdir(globalConfigDir, { recursive: true })
+  const globalConfigPath = join(globalConfigDir, "auto-resume.jsonc")
+  await writeFile(globalConfigPath, `{ "safeToolNames": ["read"] }`, "utf8")
+  
+  const originalHome = process.env.HOME
+  process.env.HOME = tempDir
+  
+  try {
+    const result = discoverUserConfigPath("claude", tempDir)
+    assert.equal(result, globalConfigPath)
+  } finally {
+    process.env.HOME = originalHome
+  }
+  
+  await rm(tempDir, { recursive: true, force: true })
+})
+
+test("discoverUserConfigPath finds global codex config in ~/.codex", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-global-codex-"))
+  const globalConfigDir = join(tempDir, ".codex")
+  await mkdir(globalConfigDir, { recursive: true })
+  const globalConfigPath = join(globalConfigDir, "auto-resume.jsonc")
+  await writeFile(globalConfigPath, `{ "safeToolNames": ["read"] }`, "utf8")
+  
+  const originalHome = process.env.HOME
+  process.env.HOME = tempDir
+  
+  try {
+    const result = discoverUserConfigPath("codex", tempDir)
+    assert.equal(result, globalConfigPath)
+  } finally {
+    process.env.HOME = originalHome
+  }
+  
+  await rm(tempDir, { recursive: true, force: true })
+})
+
+test("discoverUserConfigPath respects XDG_CONFIG_HOME for claude platform", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-xdg-"))
+  const xdgConfigDir = join(tempDir, "custom-config")
+  const claudeConfigDir = join(xdgConfigDir, "claude")
+  await mkdir(claudeConfigDir, { recursive: true })
+  const xdgConfigPath = join(claudeConfigDir, "auto-resume.jsonc")
+  await writeFile(xdgConfigPath, `{ "safeToolNames": ["read"] }`, "utf8")
+  
+  const originalHome = process.env.HOME
+  const originalXdg = process.env.XDG_CONFIG_HOME
+  process.env.HOME = tempDir
+  process.env.XDG_CONFIG_HOME = xdgConfigDir
+  
+  try {
+    const result = discoverUserConfigPath("claude", tempDir)
+    assert.equal(result, xdgConfigPath)
+  } finally {
+    process.env.HOME = originalHome
+    if (originalXdg !== undefined) {
+      process.env.XDG_CONFIG_HOME = originalXdg
+    } else {
+      delete process.env.XDG_CONFIG_HOME
+    }
+  }
+  
+  await rm(tempDir, { recursive: true, force: true })
+})
+
+test("discoverUserConfigPath prefers ~/.claude over XDG_CONFIG_HOME for claude", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-claude-priority-"))
+  
+  const homeClaudeDir = join(tempDir, ".claude")
+  await mkdir(homeClaudeDir, { recursive: true })
+  const homeClaudePath = join(homeClaudeDir, "auto-resume.jsonc")
+  await writeFile(homeClaudePath, `{ "safeToolNames": ["home"] }`, "utf8")
+  
+  const xdgConfigDir = join(tempDir, "xdg-config")
+  const xdgClaudeDir = join(xdgConfigDir, "claude")
+  await mkdir(xdgClaudeDir, { recursive: true })
+  const xdgClaudePath = join(xdgClaudeDir, "auto-resume.jsonc")
+  await writeFile(xdgClaudePath, `{ "safeToolNames": ["xdg"] }`, "utf8")
+  
+  const originalHome = process.env.HOME
+  const originalXdg = process.env.XDG_CONFIG_HOME
+  process.env.HOME = tempDir
+  process.env.XDG_CONFIG_HOME = xdgConfigDir
+  
+  try {
+    const result = discoverUserConfigPath("claude", tempDir)
+    assert.equal(result, homeClaudePath)
+  } finally {
+    process.env.HOME = originalHome
+    if (originalXdg !== undefined) {
+      process.env.XDG_CONFIG_HOME = originalXdg
+    } else {
+      delete process.env.XDG_CONFIG_HOME
+    }
+  }
+  
+  await rm(tempDir, { recursive: true, force: true })
+})
+
+test("discoverUserConfigPath project config takes priority over global", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-proj-priority-"))
+  
+  const projectConfigDir = join(tempDir, ".opencode")
+  await mkdir(projectConfigDir, { recursive: true })
+  const projectConfigPath = join(projectConfigDir, "auto-resume.jsonc")
+  await writeFile(projectConfigPath, `{ "safeToolNames": ["project"] }`, "utf8")
+  
+  const globalConfigDir = join(tempDir, ".config", "opencode")
+  await mkdir(globalConfigDir, { recursive: true })
+  const globalConfigPath = join(globalConfigDir, "auto-resume.jsonc")
+  await writeFile(globalConfigPath, `{ "safeToolNames": ["global"] }`, "utf8")
+  
+  const originalHome = process.env.HOME
+  process.env.HOME = tempDir
+  
+  try {
+    const result = discoverUserConfigPath("opencode", tempDir)
+    assert.equal(result, projectConfigPath)
+  } finally {
+    process.env.HOME = originalHome
+  }
+  
+  await rm(tempDir, { recursive: true, force: true })
 })
