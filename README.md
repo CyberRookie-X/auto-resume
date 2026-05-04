@@ -21,7 +21,7 @@ Create or update `opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.20"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.26"]
 }
 ```
 

@@ -1,4 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.24"]
+  "plugin": [
+    "github:CyberRookie-X/auto-resume#v0.1.26"
+  ]
 }
