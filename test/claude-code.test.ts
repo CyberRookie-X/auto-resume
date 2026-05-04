@@ -48,6 +48,39 @@ test("replay-safe latest turns reuse the current prompt", () => {
 }
 )
 
+test("latest user with multiple read-only assistant messages replays the original prompt", () => {
+  const plan = planClaudeRecovery(
+    {
+      sessionID: "ses_multi_assistant",
+      transcriptPath: "/tmp/ses_multi_assistant.jsonl",
+      cwd: "/tmp/project",
+    },
+    transcript([
+      {
+        type: "user",
+        message: { role: "user", content: "complete the task" },
+      },
+      {
+        type: "assistant",
+        message: {
+          role: "assistant",
+          content: [{ type: "tool_use", name: "Read", input: { file_path: "README.md" } }],
+        },
+      },
+      {
+        type: "assistant",
+        message: {
+          role: "assistant",
+          content: [{ type: "tool_use", name: "WebSearch", input: { query: "docs" } }],
+        },
+      },
+    ]),
+  )
+
+  assert.equal(plan.replaySafety, "safe")
+  assert.equal(plan.prompt, "complete the task")
+})
+
 test("unsafe latest turns fall back to RESUME", () => {
   const plan = planClaudeRecovery(
     {
