@@ -33,7 +33,7 @@ test("host INSTALL docs have clear installation instructions and config location
   const hooksJson = await readFile(join(repoRoot, "hooks", "hooks.json"), "utf8")
   const expectedOpenCode = {
     "$schema": "https://opencode.ai/config.json",
-    plugin: ["github:CyberRookie-X/auto-resume#v0.1.29"],
+    plugin: [`github:CyberRookie-X/auto-resume#v${pkg.version}`],
   }
 
   // OpenCode INSTALL.md checks

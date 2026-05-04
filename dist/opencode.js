@@ -122,6 +122,21 @@ function findLastMessage(messages, role) {
     }
     return undefined;
 }
+function findLastMessageIndex(messages, role) {
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+        if (getMessageRole(messages[index]) === role) {
+            return index;
+        }
+    }
+    return -1;
+}
+function buildLatestTurnMessages(messages) {
+    const latestUserIndex = findLastMessageIndex(messages, "user");
+    if (latestUserIndex < 0) {
+        return null;
+    }
+    return messages.slice(latestUserIndex);
+}
 function isReasoningOnlyMessage(message) {
     if (!message) {
         return false;
@@ -464,8 +479,15 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
                             if (deletedSessions.has(sessionID)) {
                                 return;
                             }
-                            if (classifyReplaySafety(messages, normalizedConfig.safeToolNames) === "safe") {
-                                replayRequest = extractReplayRequest(messages) ?? undefined;
+                            const latestTurnMessages = buildLatestTurnMessages(messages);
+                            if (latestTurnMessages) {
+                                const hasAssistantInLatestTurn = latestTurnMessages.some((message) => getMessageRole(message) === "assistant");
+                                if (!hasAssistantInLatestTurn) {
+                                    replayRequest = extractReplayRequest(latestTurnMessages) ?? undefined;
+                                }
+                                else if (classifyReplaySafety(latestTurnMessages, normalizedConfig.safeToolNames) === "safe") {
+                                    replayRequest = extractReplayRequest(latestTurnMessages) ?? undefined;
+                                }
                             }
                         }
                         catch {

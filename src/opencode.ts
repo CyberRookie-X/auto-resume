@@ -199,6 +199,25 @@ function findLastMessage(messages: readonly Record<string, unknown>[], role: str
   return undefined
 }
 
+function findLastMessageIndex(messages: readonly Record<string, unknown>[], role: string): number {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (getMessageRole(messages[index]) === role) {
+      return index
+    }
+  }
+
+  return -1
+}
+
+function buildLatestTurnMessages(messages: readonly Record<string, unknown>[]): readonly Record<string, unknown>[] | null {
+  const latestUserIndex = findLastMessageIndex(messages, "user")
+  if (latestUserIndex < 0) {
+    return null
+  }
+
+  return messages.slice(latestUserIndex)
+}
+
 function isReasoningOnlyMessage(message: Record<string, unknown> | undefined): boolean {
   if (!message) {
     return false
@@ -626,8 +645,15 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
                 return
               }
 
-              if (classifyReplaySafety(messages, normalizedConfig.safeToolNames) === "safe") {
-                replayRequest = extractReplayRequest(messages) ?? undefined
+              const latestTurnMessages = buildLatestTurnMessages(messages)
+              if (latestTurnMessages) {
+                const hasAssistantInLatestTurn = latestTurnMessages.some((message) => getMessageRole(message) === "assistant")
+
+                if (!hasAssistantInLatestTurn) {
+                  replayRequest = extractReplayRequest(latestTurnMessages) ?? undefined
+                } else if (classifyReplaySafety(latestTurnMessages, normalizedConfig.safeToolNames) === "safe") {
+                  replayRequest = extractReplayRequest(latestTurnMessages) ?? undefined
+                }
               }
             } catch {
               replayRequest = undefined

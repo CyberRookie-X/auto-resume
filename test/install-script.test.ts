@@ -65,7 +65,7 @@ async function assertRuntimeReadme(readme: string): Promise<void> {
     },
     opencodePinned: {
       "$schema": "https://opencode.ai/config.json",
-      plugin: ["github:CyberRookie-X/auto-resume#v0.1.29"],
+      plugin: [`github:CyberRookie-X/auto-resume#v${pkg.version}`],
     },
     claudePlugin: JSON.parse(await readFile(join(repoRoot, ".claude-plugin", "plugin.json"), "utf8")),
     claudeMarketplace: JSON.parse(await readFile(join(repoRoot, ".claude-plugin", "marketplace.json"), "utf8")),

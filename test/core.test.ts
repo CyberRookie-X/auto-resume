@@ -34,6 +34,38 @@ test("onError schedules recovery for stream read errors", () => {
   })
 })
 
+test("onError schedules recovery for rate limit errors", () => {
+  const engine = createRecoveryEngine({
+    now: () => 0,
+    rules: [
+      {
+        id: "resume-on-stream-read-error",
+        scope: "all",
+        match: { messageRegex: "stream_read_error|rate_limit_error" },
+        action: { type: "prompt", text: "RESUME" },
+        retry: { baseMs: 1000, factor: 2, maxMs: 8000, maxAttempts: 3 },
+      },
+    ],
+  })
+
+  const decision = engine.onError({
+    sessionID: "ses_rate_limit",
+    scope: "root",
+    errorName: "Error",
+    message:
+      'type validation failed: Value: {"error":{"type":"rate_limit_error","message":"Concurrency limit exceeded for account, please retry later"}}.',
+    raw: 'type validation failed: Value: {"error":{"type":"rate_limit_error","message":"Concurrency limit exceeded for account, please retry later"}}.',
+  })
+
+  assert.deepEqual(decision, {
+    type: "schedule",
+    sessionID: "ses_rate_limit",
+    ruleID: "resume-on-stream-read-error",
+    prompt: "RESUME",
+    delayMs: 1000,
+  })
+})
+
 test("replaceRules swaps matching rules without resetting state", () => {
   const engine = createRecoveryEngine({
     now: () => 0,

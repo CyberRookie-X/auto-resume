@@ -5,7 +5,7 @@
       "id": "resume-on-stream-read-error",
       "scope": "root",
       "match": {
-        "messageRegex": "stream_read_error"
+        "messageRegex": "stream_read_error|rate_limit_error"
       },
       "action": {
         "type": "prompt",

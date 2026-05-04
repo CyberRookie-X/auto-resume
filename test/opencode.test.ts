@@ -270,6 +270,69 @@ test("session.error with a read-only turn replays the original user request", as
   assert.equal(prompts[0].body.parts[0].text, "search the docs and summarize")
 })
 
+test("session.error without a new assistant turn replays the latest user request", async () => {
+  const prompts: PromptCall[] = []
+  const { timers, delays, flush } = createTimers()
+  const adapter = createOpenCodeAdapter({
+    client: createClient({
+      session: { id: "ses_no_new_assistant" },
+      messages: [
+        {
+          info: { role: "user", id: "msg_u1" },
+          parts: [{ type: "text", text: "first task" }],
+        },
+        {
+          info: { role: "assistant", id: "msg_a1" },
+          parts: [{ type: "tool", tool: "read", state: { status: "completed" } }],
+        },
+        {
+          info: { role: "user", id: "msg_u2" },
+          parts: [{ type: "text", text: "second task" }],
+        },
+      ],
+      prompts,
+    }) as any,
+    config: {
+      rules: [
+        {
+          id: "resume-on-stream-read-error",
+          scope: "all",
+          match: { messageRegex: "stream_read_error" },
+          action: { type: "prompt", text: "RESUME" },
+          retry: { baseMs: 10, factor: 2, maxMs: 10, maxAttempts: 1 },
+        },
+      ],
+    },
+    timers: timers as any,
+  })
+
+  let settled = false
+  const handleEventPromise = trackSettlement(
+    adapter.handleEvent({
+      type: "session.error",
+      properties: {
+        sessionID: "ses_no_new_assistant",
+        error: { name: "UnknownError", data: { message: "upstream_error: stream_read_error" } },
+      },
+    }),
+    () => {
+      settled = true
+    },
+  )
+
+  await waitForMacrotask()
+
+  assert.equal(settled, true)
+  assert.deepEqual(delays, [10])
+  assert.equal(prompts.length, 0)
+
+  await flush()
+  await handleEventPromise
+
+  assert.equal(prompts.length, 1)
+  assert.equal(prompts[0].body.parts[0].text, "second task")
+})
+
 test("session.error with multiple read-only assistant messages replays the original user request", async () => {
   const prompts: PromptCall[] = []
   const { timers, delays, flush } = createTimers()
