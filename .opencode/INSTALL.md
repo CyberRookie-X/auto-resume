@@ -11,7 +11,7 @@ Edit `~/.config/opencode/opencode.json`:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.29"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.30"]
 }
 ```
 
@@ -22,7 +22,7 @@ Edit `.opencode/opencode.json` in your project root:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.29"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.30"]
 }
 ```
 

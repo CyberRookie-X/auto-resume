@@ -7,7 +7,7 @@ Create or update these files:
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.29",
+  "version": "0.1.30",
   "description": "Codex recovery hooks for auto-resume",
   "hooks": "./hooks/hooks.json"
 }

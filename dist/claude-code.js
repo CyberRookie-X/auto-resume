@@ -170,30 +170,18 @@ function buildCurrentTurn(messages) {
         }
         const turn = messages.slice(index);
         const userMessage = turn[0];
-        const assistantParts = [];
-        let assistantAgent;
-        let assistantModel;
+        let latestAssistantMessage;
         for (let turnIndex = 1; turnIndex < turn.length; turnIndex += 1) {
             const turnMessage = turn[turnIndex];
             if (turnMessage.role !== "assistant") {
                 continue;
             }
-            assistantParts.push(...turnMessage.parts);
-            assistantAgent = turnMessage.agent ?? assistantAgent;
-            assistantModel = turnMessage.model ?? assistantModel;
+            latestAssistantMessage = turnMessage;
         }
-        if (assistantParts.length === 0) {
+        if (!latestAssistantMessage) {
             return [userMessage];
         }
-        return [
-            userMessage,
-            {
-                role: "assistant",
-                parts: assistantParts,
-                agent: assistantAgent,
-                model: assistantModel,
-            },
-        ];
+        return [userMessage, latestAssistantMessage];
     }
     return null;
 }

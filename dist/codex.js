@@ -192,40 +192,28 @@ function buildCurrentTurn(messages) {
         }
         const turn = messages.slice(index);
         const userMessage = turn[0];
-        const assistantParts = [];
+        let latestAssistantMessage;
         let hasAssistantToolParts = false;
-        let assistantAgent;
-        let assistantModel;
         for (let turnIndex = 1; turnIndex < turn.length; turnIndex += 1) {
             const turnMessage = turn[turnIndex];
             if (getMessageRole(turnMessage) !== "assistant") {
                 continue;
             }
+            latestAssistantMessage = turnMessage;
             for (const part of getMessageParts(turnMessage)) {
-                assistantParts.push(part);
                 if (readStringProperty(part, "type") === "tool") {
                     hasAssistantToolParts = true;
                 }
             }
-            assistantAgent = readProperty(turnMessage, "agent") ?? assistantAgent;
-            assistantModel = readProperty(turnMessage, "model") ?? assistantModel;
         }
-        if (assistantParts.length === 0) {
+        if (!latestAssistantMessage) {
             return {
                 messages: [userMessage],
                 hasAssistantToolParts: false,
             };
         }
         return {
-            messages: [
-                userMessage,
-                {
-                    role: "assistant",
-                    parts: assistantParts,
-                    agent: assistantAgent,
-                    model: assistantModel,
-                },
-            ],
+            messages: [userMessage, latestAssistantMessage],
             hasAssistantToolParts,
         };
     }
