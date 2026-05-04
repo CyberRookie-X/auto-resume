@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 export const DEFAULT_RUNTIME_CONFIG_URL = new URL("../auto-resume.jsonc", import.meta.url);
@@ -7,6 +7,43 @@ export const DEFAULT_RULES_CACHE_PATH = join(homedir(), ".cache", "auto-resume",
 export const DEFAULT_RULES_SOURCE_URL = "https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/auto-resume.rules.jsonc";
 export const DEFAULT_GITHUB_MIRROR_BASE_URL = "https://ghfast.top";
 export const DEFAULT_SAFE_TOOL_NAMES = ["read", "search", "list", "glob", "grep", "fetch", "websearch", "webfetch"];
+export function getPlatformConfigDirs(platform, cwd = process.cwd()) {
+    const home = homedir();
+    const projectDir = platform === "opencode"
+        ? ".opencode"
+        : platform === "claude"
+            ? ".claude"
+            : ".codex";
+    const globalDirs = [];
+    if (platform === "opencode") {
+        globalDirs.push(join(home, ".config", "opencode"));
+    }
+    else if (platform === "claude") {
+        globalDirs.push(join(home, ".claude"));
+        const xdgConfigHome = process.env.XDG_CONFIG_HOME;
+        if (xdgConfigHome) {
+            globalDirs.push(join(xdgConfigHome, "claude"));
+        }
+    }
+    else if (platform === "codex") {
+        globalDirs.push(join(home, ".codex"));
+    }
+    const candidates = [];
+    candidates.push(join(cwd, projectDir, "auto-resume.jsonc"));
+    for (const globalDir of globalDirs) {
+        candidates.push(join(globalDir, "auto-resume.jsonc"));
+    }
+    return candidates;
+}
+export function discoverUserConfigPath(platform, cwd = process.cwd()) {
+    const candidates = getPlatformConfigDirs(platform, cwd);
+    for (const path of candidates) {
+        if (existsSync(path)) {
+            return path;
+        }
+    }
+    return undefined;
+}
 function isRecord(value) {
     return typeof value === "object" && value !== null;
 }
@@ -171,9 +208,25 @@ export function parseAutoResumeRulesFile(text) {
     }
     return rules.map((rule, index) => normalizeRule(rule, index));
 }
-export function loadAutoResumeRuntimeConfigFile(path = DEFAULT_RUNTIME_CONFIG_URL) {
-    const resolvedPath = path ?? DEFAULT_RUNTIME_CONFIG_URL;
-    return parseAutoResumeRuntimeConfig(readFileSync(resolvedPath, "utf8"));
+export function loadAutoResumeRuntimeConfigFile(path, options) {
+    if (path !== undefined) {
+        return parseAutoResumeRuntimeConfig(readFileSync(path, "utf8"));
+    }
+    if (options?.platform) {
+        const userConfigPath = discoverUserConfigPath(options.platform, options.cwd ?? process.cwd());
+        if (userConfigPath) {
+            return parseAutoResumeRuntimeConfig(readFileSync(userConfigPath, "utf8"));
+        }
+        console.warn(`[auto-resume] User config file not found, using plugin built-in defaults.`);
+        const candidates = getPlatformConfigDirs(options.platform, options.cwd ?? process.cwd());
+        if (candidates.length > 0) {
+            console.warn(`  Project-level config location: ${candidates[0]}`);
+        }
+        if (candidates.length > 1) {
+            console.warn(`  Global-level config location: ${candidates[1]}`);
+        }
+    }
+    return parseAutoResumeRuntimeConfig(readFileSync(DEFAULT_RUNTIME_CONFIG_URL, "utf8"));
 }
 export function loadAutoResumeRulesFile(path = DEFAULT_RULES_CONFIG_URL) {
     const resolvedPath = path ?? DEFAULT_RULES_CONFIG_URL;

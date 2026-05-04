@@ -401,3 +401,53 @@ test("discoverUserConfigPath project config takes priority over global", async (
   
   await rm(tempDir, { recursive: true, force: true })
 })
+
+test("loadAutoResumeRuntimeConfigFile with platform option loads discovered user config", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-load-platform-"))
+  const configDir = join(tempDir, ".opencode")
+  await mkdir(configDir, { recursive: true })
+  const configPath = join(configDir, "auto-resume.jsonc")
+  await writeFile(configPath, `{ "safeToolNames": ["custom-tool"] }`, "utf8")
+  
+  try {
+    const config = loadAutoResumeRuntimeConfigFile(undefined, { platform: "opencode", cwd: tempDir })
+    assert.deepEqual(config.safeToolNames, ["custom-tool"])
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
+})
+
+test("loadAutoResumeRuntimeConfigFile falls back to default when no user config found", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-load-nofallback-"))
+  
+  const originalHome = process.env.HOME
+  process.env.HOME = tempDir
+  
+  try {
+    const config = loadAutoResumeRuntimeConfigFile(undefined, { platform: "opencode", cwd: tempDir })
+    assert.ok(Array.isArray(config.safeToolNames))
+    assert.ok(config.safeToolNames.includes("read"))
+  } finally {
+    process.env.HOME = originalHome
+    await rm(tempDir, { recursive: true, force: true })
+  }
+})
+
+test("loadAutoResumeRuntimeConfigFile with explicit path ignores platform option", async () => {
+  const tempDir = await mkdtemp(join(tmpdir(), "auto-resume-load-explicit-"))
+  
+  const explicitPath = join(tempDir, "explicit.jsonc")
+  await writeFile(explicitPath, `{ "safeToolNames": ["explicit-tool"] }`, "utf8")
+  
+  const configDir = join(tempDir, ".opencode")
+  await mkdir(configDir, { recursive: true })
+  const discoveredPath = join(configDir, "auto-resume.jsonc")
+  await writeFile(discoveredPath, `{ "safeToolNames": ["discovered-tool"] }`, "utf8")
+  
+  try {
+    const config = loadAutoResumeRuntimeConfigFile(explicitPath, { platform: "opencode", cwd: tempDir })
+    assert.deepEqual(config.safeToolNames, ["explicit-tool"])
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
+})

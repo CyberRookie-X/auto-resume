@@ -15,7 +15,7 @@ export type Platform = "opencode" | "claude" | "codex"
 
 type RecordLike = Record<string, unknown>
 
-function getPlatformConfigDirs(platform: Platform, cwd: string = process.cwd()): string[] {
+export function getPlatformConfigDirs(platform: Platform, cwd: string = process.cwd()): string[] {
   const home = homedir()
   
   const projectDir = platform === "opencode" 
@@ -262,9 +262,31 @@ export function parseAutoResumeRulesFile(text: string): RecoveryRule[] {
   return rules.map((rule, index) => normalizeRule(rule, index))
 }
 
-export function loadAutoResumeRuntimeConfigFile(path: string | URL | undefined = DEFAULT_RUNTIME_CONFIG_URL): AutoResumeRuntimeConfig {
-  const resolvedPath = path ?? DEFAULT_RUNTIME_CONFIG_URL
-  return parseAutoResumeRuntimeConfig(readFileSync(resolvedPath, "utf8"))
+export function loadAutoResumeRuntimeConfigFile(
+  path?: string | URL,
+  options?: { platform?: Platform; cwd?: string }
+): AutoResumeRuntimeConfig {
+  if (path !== undefined) {
+    return parseAutoResumeRuntimeConfig(readFileSync(path, "utf8"))
+  }
+  
+  if (options?.platform) {
+    const userConfigPath = discoverUserConfigPath(options.platform, options.cwd ?? process.cwd())
+    if (userConfigPath) {
+      return parseAutoResumeRuntimeConfig(readFileSync(userConfigPath, "utf8"))
+    }
+    
+    console.warn(`[auto-resume] User config file not found, using plugin built-in defaults.`)
+    const candidates = getPlatformConfigDirs(options.platform, options.cwd ?? process.cwd())
+    if (candidates.length > 0) {
+      console.warn(`  Project-level config location: ${candidates[0]}`)
+    }
+    if (candidates.length > 1) {
+      console.warn(`  Global-level config location: ${candidates[1]}`)
+    }
+  }
+  
+  return parseAutoResumeRuntimeConfig(readFileSync(DEFAULT_RUNTIME_CONFIG_URL, "utf8"))
 }
 
 export function loadAutoResumeRulesFile(path: string | URL | undefined = DEFAULT_RULES_CONFIG_URL): RecoveryRule[] {
