@@ -1,6 +1,6 @@
 {
   "name": "auto-resume",
-  "version": "0.1.14",
+  "version": "0.1.16",
   "private": true,
   "type": "module",
   "main": "src/opencode.ts",
@@ -9,9 +9,7 @@
     "release:runtime": "node scripts/package-runtime.mjs --out .release/auto-resume-runtime.tar.gz"
   },
   "dependencies": {
-    "@npmcli/arborist": "^9.4.3",
-    "@opencode-ai/sdk": "latest",
-    "tsx": "^4.19.0"
+    "@opencode-ai/sdk": "latest"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

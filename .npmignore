@@ -1,0 +1,10 @@
+src/
+test/
+tsconfig.json
+.github/
+docs/
+*.test.ts
+*.md
+.worktrees/
+coverage/
+.release/
