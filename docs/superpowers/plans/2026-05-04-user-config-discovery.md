@@ -354,15 +354,23 @@ git commit -m "feat: pass cwd to config loader in OpenCode adapter"
 ### Task 5: Update Claude Code adapter
 
 **Files:**
-- Modify: `src/claude-code.ts` (similar changes to opencode.ts)
+- Modify: `src/claude-code.ts:339`
 
-- [ ] **Step 1: Find adapter function and add cwd parameter**
+- [ ] **Step 1: Pass platform and cwd to config loading**
 
-Search for the main adapter function in `src/claude-code.ts` (similar structure to opencode.ts).
+Find `src/claude-code.ts:339` where `loadAutoResumeRuntimeConfigFile()` is called.
 
-Add `cwd?: string` to the options type and pass it to config loading with `platform: "claude"`.
+Replace:
+```typescript
+const safeToolNames = loadAutoResumeRuntimeConfigFile().safeToolNames
+```
 
-Implementation follows same pattern as Task 4.
+With:
+```typescript
+const safeToolNames = loadAutoResumeRuntimeConfigFile(undefined, { platform: "claude", cwd: input.cwd }).safeToolNames
+```
+
+Note: Claude Code hooks receive `cwd` in the hook input (see `ClaudeHookInput` type at line 26-30).
 
 - [ ] **Step 2: Run tests**
 
@@ -381,15 +389,23 @@ git commit -m "feat: pass cwd to config loader in Claude Code adapter"
 ### Task 6: Update Codex adapter
 
 **Files:**
-- Modify: `src/codex.ts` (similar changes to opencode.ts)
+- Modify: `src/codex.ts:342`
 
-- [ ] **Step 1: Find adapter function and add cwd parameter**
+- [ ] **Step 1: Pass platform and cwd to config loading**
 
-Search for the main adapter function in `src/codex.ts`.
+Find `src/codex.ts:342` where `loadAutoResumeRuntimeConfigFile()` is called.
 
-Add `cwd?: string` to the options type and pass it to config loading with `platform: "codex"`.
+Replace:
+```typescript
+const safeToolNames = loadAutoResumeRuntimeConfigFile().safeToolNames
+```
 
-Implementation follows same pattern as Task 4.
+With:
+```typescript
+const safeToolNames = loadAutoResumeRuntimeConfigFile(undefined, { platform: "codex", cwd: input.cwd }).safeToolNames
+```
+
+Note: Codex hooks receive `cwd` in the hook input (see `CodexHookInput` type at line 10-17).
 
 - [ ] **Step 2: Run tests**
 
