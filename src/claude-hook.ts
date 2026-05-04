@@ -12,7 +12,7 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString("utf8")
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const rawInput = await readStdin()
   const input = parseClaudeHookInput(rawInput)
   if (!input) {

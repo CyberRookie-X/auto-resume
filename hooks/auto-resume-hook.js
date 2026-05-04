@@ -6,4 +6,5 @@ import { fileURLToPath } from "url"
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const distPath = resolve(__dirname, "../dist/auto-resume-hook.js")
 
-await import(distPath)
+const module = await import(distPath)
+await module.main()
