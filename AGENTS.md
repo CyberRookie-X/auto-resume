@@ -68,8 +68,10 @@ npm test
 1. Complete development on dev branch
 2. Test: `npm test`
 3. Compile: `npx tsc -p tsconfig.json`
-4. Merge to main: `git checkout main && git merge dev`
-5. Bump version: `npm version patch`
-6. Update opencode.json version
-7. Tag: `git tag v0.1.XX`
-8. Push: `git push origin main --tags && git push origin dev`
+4. Sync versions: `node scripts/sync-versions.mjs`
+5. Merge to main: `git checkout main && git merge dev`
+6. Bump version: `npm version patch`
+7. Sync versions again: `node scripts/sync-versions.mjs`
+8. Update opencode.json version
+9. Tag: `git tag v0.1.XX`
+10. Push: `git push origin main --tags && git push origin dev`
