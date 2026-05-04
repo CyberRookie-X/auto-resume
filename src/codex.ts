@@ -339,7 +339,7 @@ function readTranscriptText(input: CodexHookInput | null, readFile: NonNullable<
 }
 
 function buildCodexStopOutput(input: CodexHookInput | null, transcriptText: string | undefined): CodexHookOutput {
-  const safeToolNames = loadAutoResumeRuntimeConfigFile().safeToolNames
+  const safeToolNames = loadAutoResumeRuntimeConfigFile(undefined, { platform: "codex", cwd: input?.cwd }).safeToolNames
 
   if (!transcriptText) {
     return buildFallbackOutput()
