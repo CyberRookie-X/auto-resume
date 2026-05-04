@@ -19,7 +19,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.5"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.20"]
 }
 ```
 
