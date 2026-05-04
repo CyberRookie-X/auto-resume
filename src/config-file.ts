@@ -305,6 +305,8 @@ function tryLoadAutoResumeRulesFile(path: string | URL | undefined): RecoveryRul
 export type LoadAutoResumeConfigOptions = {
   cachePath?: string | URL
   rulesPath?: string | URL
+  platform?: Platform
+  cwd?: string
 }
 
 export function loadAutoResumeConfigFile(
