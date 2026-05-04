@@ -33,6 +33,7 @@ type AdapterOptions = {
   fetch?: typeof globalThis.fetch
   rulesCachePath?: string
   timers?: TimerAPI
+  cwd?: string
 }
 
 type OpenCodePluginInput = {
@@ -41,6 +42,7 @@ type OpenCodePluginInput = {
   fetch?: typeof globalThis.fetch
   rulesCachePath?: string
   timers?: TimerAPI
+  cwd?: string
 }
 
 type PromptContext = {
@@ -446,9 +448,9 @@ function createRecoveryDispatcher(client: OpenCodeClient, isDeleted: (sessionID:
   }
 }
 
-export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesCachePath, timers }: AdapterOptions) {
+export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesCachePath, timers, cwd }: AdapterOptions) {
   const resolvedRulesCachePath = rulesCachePath ?? DEFAULT_RULES_CACHE_PATH
-  const normalizedConfig = normalizeConfig(config, { cachePath: resolvedRulesCachePath })
+  const normalizedConfig = normalizeConfig(config, { cachePath: resolvedRulesCachePath, platform: "opencode", cwd })
   const engine = createRecoveryEngine({
     now: () => Date.now(),
     rules: normalizedConfig.rules,
@@ -695,8 +697,8 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
   }
 }
 
-export default async function autoResumePlugin({ client, config, timers }: OpenCodePluginInput) {
-  const adapter = createOpenCodeAdapter({ client, config, timers })
+export default async function autoResumePlugin({ client, config, timers, cwd }: OpenCodePluginInput) {
+  const adapter = createOpenCodeAdapter({ client, config, timers, cwd })
 
   return {
     event: async ({ event }: { event: OpenCodeEvent }) => {
