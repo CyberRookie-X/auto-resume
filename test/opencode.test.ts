@@ -117,6 +117,8 @@ function createClient(options: {
     | Array<{ info?: Record<string, unknown>; parts?: Array<Record<string, unknown>> }>
     | (() => unknown | Promise<unknown>)
   prompt?: (call: PromptCall) => Promise<unknown>
+  deleteMessage?: (call: { sessionID: string; messageID: string }) => Promise<unknown>
+  deleteMessageCalls?: Array<{ sessionID: string; messageID: string }>
   prompts: PromptCall[]
 }) {
   return {
@@ -133,6 +135,13 @@ function createClient(options: {
         options.prompts.push(call)
         if (options.prompt) {
           return options.prompt(call)
+        }
+        return undefined
+      },
+      deleteMessage: async (call: { sessionID: string; messageID: string }) => {
+        options.deleteMessageCalls?.push(call)
+        if (options.deleteMessage) {
+          return options.deleteMessage(call)
         }
         return undefined
       },
@@ -207,8 +216,9 @@ test("session.error picks up refreshed sync rules", async () => {
   assert.equal(prompts[0].body.parts[0].text, "RESUME")
 })
 
-test("session.error with a read-only turn replays the original user request", async () => {
+test("session.error with a read-only turn deletes the assistant turn and resumes", async () => {
   const prompts: PromptCall[] = []
+  const deleteMessageCalls: Array<{ sessionID: string; messageID: string }> = []
   const { timers, delays, flush } = createTimers()
   const adapter = createOpenCodeAdapter({
     client: createClient({
@@ -227,6 +237,7 @@ test("session.error with a read-only turn replays the original user request", as
         },
       ],
       prompts,
+      deleteMessageCalls,
     }) as any,
     config: {
       rules: [
@@ -265,13 +276,15 @@ test("session.error with a read-only turn replays the original user request", as
   await flush()
   await handleEventPromise
 
+  assert.deepEqual(deleteMessageCalls, [{ sessionID: "ses_1", messageID: "msg_a1" }])
   assert.equal(prompts.length, 1)
   assert.equal(prompts[0].path.id, "ses_1")
-  assert.equal(prompts[0].body.parts[0].text, "search the docs and summarize")
+  assert.equal(prompts[0].body.parts[0].text, "RESUME")
 })
 
 test("session.error without a new assistant turn replays the latest user request", async () => {
   const prompts: PromptCall[] = []
+  const deleteMessageCalls: Array<{ sessionID: string; messageID: string }> = []
   const { timers, delays, flush } = createTimers()
   const adapter = createOpenCodeAdapter({
     client: createClient({
@@ -291,6 +304,7 @@ test("session.error without a new assistant turn replays the latest user request
         },
       ],
       prompts,
+      deleteMessageCalls,
     }) as any,
     config: {
       rules: [
@@ -329,12 +343,14 @@ test("session.error without a new assistant turn replays the latest user request
   await flush()
   await handleEventPromise
 
+  assert.deepEqual(deleteMessageCalls, [{ sessionID: "ses_no_new_assistant", messageID: "msg_u2" }])
   assert.equal(prompts.length, 1)
   assert.equal(prompts[0].body.parts[0].text, "second task")
 })
 
-test("session.error with multiple read-only assistant messages replays the original user request", async () => {
+test("session.error with multiple read-only assistant messages deletes the latest assistant turn and resumes", async () => {
   const prompts: PromptCall[] = []
+  const deleteMessageCalls: Array<{ sessionID: string; messageID: string }> = []
   const { timers, delays, flush } = createTimers()
   const adapter = createOpenCodeAdapter({
     client: createClient({
@@ -354,6 +370,7 @@ test("session.error with multiple read-only assistant messages replays the origi
         },
       ],
       prompts,
+      deleteMessageCalls,
     }) as any,
     config: {
       rules: [
@@ -392,9 +409,10 @@ test("session.error with multiple read-only assistant messages replays the origi
   await flush()
   await handleEventPromise
 
+  assert.deepEqual(deleteMessageCalls, [{ sessionID: "ses_multi_assistant", messageID: "msg_a2" }])
   assert.equal(prompts.length, 1)
   assert.equal(prompts[0].path.id, "ses_multi_assistant")
-  assert.equal(prompts[0].body.parts[0].text, "complete the task")
+  assert.equal(prompts[0].body.parts[0].text, "RESUME")
 })
 
 test("session.error with a native Error stack injects RESUME", async () => {
@@ -502,6 +520,7 @@ test("session.error with a primitive payload preserves quoted raw text", async (
 
 test("session.error with a write tool falls back to RESUME", async () => {
   const prompts: PromptCall[] = []
+  const deleteMessageCalls: Array<{ sessionID: string; messageID: string }> = []
   const { timers, delays, flush } = createTimers()
   const adapter = createOpenCodeAdapter({
     client: createClient({
@@ -514,6 +533,7 @@ test("session.error with a write tool falls back to RESUME", async () => {
         },
       ],
       prompts,
+      deleteMessageCalls,
     }) as any,
     config: {
       rules: [
@@ -552,6 +572,7 @@ test("session.error with a write tool falls back to RESUME", async () => {
   await flush()
   await handleEventPromise
 
+  assert.deepEqual(deleteMessageCalls, [])
   assert.equal(prompts.length, 1)
   assert.equal(prompts[0].path.id, "ses_1d")
   assert.equal(prompts[0].body.parts[0].text, "RESUME")
@@ -559,6 +580,7 @@ test("session.error with a write tool falls back to RESUME", async () => {
 
 test("session.error with a shell tool falls back to RESUME", async () => {
   const prompts: PromptCall[] = []
+  const deleteMessageCalls: Array<{ sessionID: string; messageID: string }> = []
   const { timers, delays, flush } = createTimers()
   const adapter = createOpenCodeAdapter({
     client: createClient({
@@ -571,6 +593,7 @@ test("session.error with a shell tool falls back to RESUME", async () => {
         },
       ],
       prompts,
+      deleteMessageCalls,
     }) as any,
     config: {
       rules: [
@@ -609,6 +632,7 @@ test("session.error with a shell tool falls back to RESUME", async () => {
   await flush()
   await handleEventPromise
 
+  assert.deepEqual(deleteMessageCalls, [])
   assert.equal(prompts.length, 1)
   assert.equal(prompts[0].path.id, "ses_1e")
   assert.equal(prompts[0].body.parts[0].text, "RESUME")
@@ -616,6 +640,7 @@ test("session.error with a shell tool falls back to RESUME", async () => {
 
 test("session.error cancels a pending recovery before awaiting messages", async () => {
   const prompts: PromptCall[] = []
+  const deleteMessageCalls: Array<{ sessionID: string; messageID: string }> = []
   const { timers, delays, flush } = createTimers()
   const deferredMessages = createDeferred<unknown>()
   let messageCalls = 0
@@ -638,11 +663,12 @@ test("session.error cancels a pending recovery before awaiting messages", async 
               },
             ],
           }
-        }
+      }
 
         return deferredMessages.promise
       },
       prompts,
+      deleteMessageCalls,
     }) as any,
     config: {
       rules: [
@@ -719,12 +745,14 @@ test("session.error cancels a pending recovery before awaiting messages", async 
   await firstEventPromise
   await secondEventPromise
 
+  assert.deepEqual(deleteMessageCalls, [{ sessionID: "ses_1f", messageID: "msg_a2" }])
   assert.equal(prompts.length, 1)
-  assert.equal(prompts[0].body.parts[0].text, "second request")
+  assert.equal(prompts[0].body.parts[0].text, "RESUME")
 })
 
 test("session.idle replays read-only reasoning-only stops", async () => {
   const prompts: PromptCall[] = []
+  const deleteMessageCalls: Array<{ sessionID: string; messageID: string }> = []
   const { timers, flush } = createTimers()
   const adapter = createOpenCodeAdapter({
     client: createClient({
@@ -744,6 +772,7 @@ test("session.idle replays read-only reasoning-only stops", async () => {
         },
       ],
       prompts,
+      deleteMessageCalls,
     }) as any,
     config: {
       rules: [
@@ -778,9 +807,10 @@ test("session.idle replays read-only reasoning-only stops", async () => {
   await flush()
   await handleEventPromise
 
+  assert.deepEqual(deleteMessageCalls, [{ sessionID: "ses_2", messageID: "msg_1" }])
   assert.equal(prompts.length, 1)
   assert.equal(prompts[0].path.id, "ses_2")
-  assert.equal(prompts[0].body.parts[0].text, "find the config and summarize it")
+  assert.equal(prompts[0].body.parts[0].text, "RESUME")
 })
 
 test("session.deleted cancels a pending replay", async () => {
@@ -855,6 +885,7 @@ test("session.deleted cancels a pending replay", async () => {
 
 test("session.idle resumes when a tool part reports Tool execution aborted", async () => {
   const prompts: PromptCall[] = []
+  const deleteMessageCalls: Array<{ sessionID: string; messageID: string }> = []
   const { timers, flush } = createTimers()
   const adapter = createOpenCodeAdapter({
     client: createClient({
@@ -875,6 +906,7 @@ test("session.idle resumes when a tool part reports Tool execution aborted", asy
         },
       ],
       prompts,
+      deleteMessageCalls,
     }) as any,
     config: {
       rules: [
@@ -909,6 +941,7 @@ test("session.idle resumes when a tool part reports Tool execution aborted", asy
   await flush()
   await handleEventPromise
 
+  assert.deepEqual(deleteMessageCalls, [])
   assert.equal(prompts.length, 1)
   assert.equal(prompts[0].path.id, "ses_2b")
   assert.equal(prompts[0].body.parts[0].text, "RESUME")
@@ -916,6 +949,7 @@ test("session.idle resumes when a tool part reports Tool execution aborted", asy
 
 test("session.idle resumes when assistant finish is length", async () => {
   const prompts: PromptCall[] = []
+  const deleteMessageCalls: Array<{ sessionID: string; messageID: string }> = []
   const { timers, flush } = createTimers()
   const adapter = createOpenCodeAdapter({
     client: createClient({
@@ -928,6 +962,7 @@ test("session.idle resumes when assistant finish is length", async () => {
         },
       ],
       prompts,
+      deleteMessageCalls,
     }) as any,
     config: {
       rules: [
@@ -962,6 +997,7 @@ test("session.idle resumes when assistant finish is length", async () => {
   await flush()
   await handleEventPromise
 
+  assert.deepEqual(deleteMessageCalls, [{ sessionID: "ses_2c", messageID: "msg_1" }])
   assert.equal(prompts.length, 1)
   assert.equal(prompts[0].path.id, "ses_2c")
   assert.equal(prompts[0].body.parts[0].text, "RESUME")
@@ -1197,6 +1233,7 @@ test("session.error with MessageAbortedError does not block later retryable erro
 
 test("session.status retry clears a previous MessageAbortedError lock", async () => {
   const prompts: PromptCall[] = []
+  const deleteMessageCalls: Array<{ sessionID: string; messageID: string }> = []
   const { timers, flush } = createTimers()
   const adapter = createOpenCodeAdapter({
     client: createClient({
@@ -1212,6 +1249,7 @@ test("session.status retry clears a previous MessageAbortedError lock", async ()
         },
       ],
       prompts,
+      deleteMessageCalls,
     }) as any,
     config: {
       rules: [
@@ -1265,8 +1303,9 @@ test("session.status retry clears a previous MessageAbortedError lock", async ()
   await flush()
   await handleEventPromise
 
+  assert.deepEqual(deleteMessageCalls, [{ sessionID: "ses_abort_unlock", messageID: "msg_a1" }])
   assert.equal(prompts.length, 1)
-  assert.equal(prompts[0].body.parts[0].text, "search the docs and summarize")
+  assert.equal(prompts[0].body.parts[0].text, "RESUME")
 })
 
 test("prompt failure clears pending recovery so a later event can retry", async () => {

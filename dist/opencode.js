@@ -114,6 +114,13 @@ function getMessageFingerprint(message) {
         return `${id}:${role}:${parts.length}`;
     }
 }
+function getMessageID(message) {
+    if (!message) {
+        return undefined;
+    }
+    const info = getMessageInfo(message);
+    return readStringProperty(info, "id") ?? readStringProperty(message, "id");
+}
 function findLastMessage(messages, role) {
     for (let index = messages.length - 1; index >= 0; index -= 1) {
         if (getMessageRole(messages[index]) === role) {
@@ -277,6 +284,14 @@ function readSessionContext(sessionID, client) {
 function readMessages(sessionID, client) {
     return client.session.messages({ path: { id: sessionID } }).then(getMessages);
 }
+async function deleteSessionMessage(sessionID, messageID, client) {
+    try {
+        await client.session.deleteMessage?.({ sessionID, messageID });
+    }
+    catch {
+        return;
+    }
+}
 async function readPromptContext(sessionID, client) {
     try {
         const messages = await readMessages(sessionID, client);
@@ -307,9 +322,15 @@ function buildPromptBody(prompt, context) {
     return body;
 }
 function createRecoveryDispatcher(client, isDeleted) {
-    return async function dispatchRecovery(sessionID, prompt, body) {
+    return async function dispatchRecovery(sessionID, prompt, body, deleteMessageID) {
         if (isDeleted(sessionID)) {
             return;
+        }
+        if (deleteMessageID) {
+            await deleteSessionMessage(sessionID, deleteMessageID, client);
+            if (isDeleted(sessionID)) {
+                return;
+            }
         }
         if (body) {
             if (isDeleted(sessionID)) {
@@ -399,11 +420,11 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
         const seenAt = recentPositiveStatusAt.get(sessionID);
         return seenAt !== undefined && Date.now() - seenAt <= MESSAGE_ABORT_SIGNAL_WINDOW_MS;
     }
-    function scheduleRecovery(decision, body) {
+    function scheduleRecovery(decision, body, deleteMessageID) {
         cancelPendingRecovery(decision.sessionID);
         const handle = timerAPI.setTimeout(async () => {
             try {
-                await dispatchRecovery(decision.sessionID, decision.prompt, body);
+                await dispatchRecovery(decision.sessionID, decision.prompt, body, deleteMessageID);
                 engine.markExecuted({ sessionID: decision.sessionID, ruleID: decision.ruleID });
             }
             catch {
@@ -474,6 +495,7 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
                     });
                     if (decision.type === "schedule") {
                         let replayRequest;
+                        let deleteMessageID;
                         try {
                             const messages = await readMessages(sessionID, client);
                             if (deletedSessions.has(sessionID)) {
@@ -483,20 +505,25 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
                             if (latestTurnMessages) {
                                 const hasAssistantInLatestTurn = latestTurnMessages.some((message) => getMessageRole(message) === "assistant");
                                 if (!hasAssistantInLatestTurn) {
-                                    replayRequest = extractReplayRequest(latestTurnMessages) ?? undefined;
+                                    const userReplayRequest = extractReplayRequest(latestTurnMessages) ?? undefined;
+                                    if (userReplayRequest) {
+                                        replayRequest = userReplayRequest;
+                                        deleteMessageID = getMessageID(latestTurnMessages[0]);
+                                    }
                                 }
                                 else if (classifyReplaySafety(latestTurnMessages, normalizedConfig.safeToolNames) === "safe") {
-                                    replayRequest = extractReplayRequest(latestTurnMessages) ?? undefined;
+                                    deleteMessageID = getMessageID(findLastMessage(latestTurnMessages, "assistant"));
                                 }
                             }
                         }
                         catch {
                             replayRequest = undefined;
+                            deleteMessageID = undefined;
                         }
                         if (deletedSessions.has(sessionID)) {
                             return;
                         }
-                        scheduleRecovery(decision, replayRequest);
+                        scheduleRecovery(decision, replayRequest, deleteMessageID);
                     }
                     return;
                 }
@@ -521,19 +548,19 @@ export function createOpenCodeAdapter({ client, config, fetch: fetchImpl, rulesC
                         latestMessageFingerprint: latestMessage ? getMessageFingerprint(latestMessage) : undefined,
                     });
                     if (decision.type === "schedule") {
-                        let replayRequest;
+                        let deleteMessageID;
                         try {
                             if (classifyReplaySafety(messages, normalizedConfig.safeToolNames) === "safe") {
-                                replayRequest = extractReplayRequest(messages) ?? undefined;
+                                deleteMessageID = getMessageID(latestAssistantMessage);
                             }
                         }
                         catch {
-                            replayRequest = undefined;
+                            deleteMessageID = undefined;
                         }
                         if (deletedSessions.has(sessionID)) {
                             return;
                         }
-                        scheduleRecovery(decision, replayRequest);
+                        scheduleRecovery(decision, undefined, deleteMessageID);
                     }
                 }
             }
