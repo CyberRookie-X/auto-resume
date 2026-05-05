@@ -24,7 +24,7 @@ To pin a release instead:
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.31"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.32"]
 }
 ```
 
@@ -41,7 +41,7 @@ Create or update these files:
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "description": "Recovery hooks for stopped sessions",
   "author": {
     "name": "CyberRookie-X"
@@ -63,7 +63,7 @@ Create or update these files:
       "name": "auto-resume",
       "source": "./",
       "description": "Recovery hooks for stopped sessions",
-      "version": "0.1.31",
+      "version": "0.1.32",
       "author": {
         "name": "CyberRookie-X"
       }
@@ -101,7 +101,7 @@ Create or update these files:
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "description": "Codex recovery hooks for auto-resume",
   "hooks": "./hooks/hooks.json"
 }

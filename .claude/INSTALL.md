@@ -7,7 +7,7 @@ Create or update these files:
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "description": "Recovery hooks for stopped sessions",
   "author": {
     "name": "CyberRookie-X"
@@ -29,7 +29,7 @@ Create or update these files:
       "name": "auto-resume",
       "source": "./",
       "description": "Recovery hooks for stopped sessions",
-      "version": "0.1.31",
+      "version": "0.1.32",
       "author": {
         "name": "CyberRookie-X"
       }

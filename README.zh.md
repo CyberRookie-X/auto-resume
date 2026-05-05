@@ -22,7 +22,7 @@
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.31"]
+  "plugin": ["github:CyberRookie-X/auto-resume#v0.1.32"]
 }
 ```
 
@@ -39,7 +39,7 @@ OpenCode 会直接从 GitHub 加载这个插件，所以这两种写法都不需
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "description": "Recovery hooks for stopped sessions",
   "author": {
     "name": "CyberRookie-X"
@@ -61,7 +61,7 @@ OpenCode 会直接从 GitHub 加载这个插件，所以这两种写法都不需
       "name": "auto-resume",
       "source": "./",
       "description": "Recovery hooks for stopped sessions",
-      "version": "0.1.31",
+      "version": "0.1.32",
       "author": {
         "name": "CyberRookie-X"
       }
@@ -99,7 +99,7 @@ OpenCode 会直接从 GitHub 加载这个插件，所以这两种写法都不需
 ```json
 {
   "name": "auto-resume",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "description": "Codex recovery hooks for auto-resume",
   "hooks": "./hooks/hooks.json"
 }
