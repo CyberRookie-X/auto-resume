@@ -10,6 +10,12 @@ Use the native plugin flow first:
 
 ### OpenCode
 
+#### Agent auto-install (send this description to your agent)
+```txt
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md
+```
+
+#### Manual install
 Create or update `opencode.json`:
 
 ```json
@@ -34,6 +40,12 @@ Restart OpenCode.
 
 ### Claude Code
 
+#### Agent auto-install (send this description to your agent)
+```txt
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md
+```
+
+#### Manual install
 Create or update these files:
 
 `.claude-plugin/plugin.json`
@@ -93,6 +105,13 @@ Create or update these files:
 Restart Claude Code.
 
 ### Codex
+
+#### Agent auto-install (send this description to your agent)
+```txt
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md
+```
+
+#### Manual install
 
 Create or update these files:
 
