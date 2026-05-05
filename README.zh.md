@@ -8,6 +8,12 @@
 
 ### OpenCode
 
+#### agent 自动帮你安装（把这段描述发给 agent）
+```txt
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.opencode/INSTALL.md
+```
+
+#### 手动安装
 创建或更新 `opencode.json`：
 
 ```json
@@ -31,7 +37,12 @@ OpenCode 会直接从 GitHub 加载这个插件，所以这两种写法都不需
 重启 OpenCode。
 
 ### Claude Code
+#### agent 自动帮你安装（把这段描述发给 agent）
+```txt
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.claude/INSTALL.md
+```
 
+#### 手动安装
 创建或更新这些文件：
 
 `.claude-plugin/plugin.json`
@@ -91,6 +102,12 @@ OpenCode 会直接从 GitHub 加载这个插件，所以这两种写法都不需
 重启 Claude Code。
 
 ### Codex
+#### agent 自动帮你安装（把这段描述发给 agent）
+```txt
+Fetch and follow instructions from https://raw.githubusercontent.com/CyberRookie-X/auto-resume/refs/heads/main/.codex-plugin/INSTALL.md
+```
+
+#### 手动安装
 
 创建或更新这些文件：
 
